@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Empresa {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(200)
+  cnpj      String?  @unique @db.VarChar(18)
+  ativa     Boolean  @default(true)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  contas    Conta[]
+  lancamentos Lancamento[]
+
+  @@map("empresas")
+}
+
+model Conta {
+  id           Int      @id @default(autoincrement())
+  codigo       String   @db.VarChar(20)
+  nome         String   @db.VarChar(200)
+  tipo         String   @db.VarChar(10)
+  natureza     String   @db.VarChar(10)
+  nivel        Int
+  grupo        String   @db.VarChar(30)
+  ativa        Boolean  @default(true)
+  contaPaiId   Int?     @map("conta_pai_id")
+  empresaId    Int      @map("empresa_id")
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  contaPai     Conta?   @relation("ContaHierarquia", fields: [contaPaiId], references: [id])
+  contasFilhas Conta[]  @relation("ContaHierarquia")
+  empresa      Empresa  @relation(fields: [empresaId], references: [id])
+
+  lancamentosDebito  Lancamento[] @relation("LancamentosDebito")
+  lancamentosCredito Lancamento[] @relation("LancamentosCredito")
+
+  @@unique([codigo, empresaId])
+  @@index([empresaId])
+  @@index([contaPaiId])
+  @@map("contas")
+}
+
+model Lancamento {
+  id              Int      @id @default(autoincrement())
+  data            DateTime @db.Date
+  valor           Decimal  @db.Decimal(15, 2)
+  historico       String   @db.Text
+  contaDebitoId   Int      @map("conta_debito_id")
+  contaCreditoId  Int      @map("conta_credito_id")
+  empresaId       Int      @map("empresa_id")
+  criadoEm        DateTime @default(now()) @map("criado_em")
+  atualizadoEm    DateTime @updatedAt @map("atualizado_em")
+
+  contaDebito     Conta    @relation("LancamentosDebito", fields: [contaDebitoId], references: [id])
+  contaCredito    Conta    @relation("LancamentosCredito", fields: [contaCreditoId], references: [id])
+  empresa         Empresa  @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+  @@index([contaDebitoId])
+  @@index([contaCreditoId])
+  @@map("lancamentos")
+}
+

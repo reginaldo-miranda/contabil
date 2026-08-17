@@ -1,0 +1,170 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  width: 500px;
+  max-width: 95vw;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-glass);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.closeBtn:hover {
+  color: var(--text-primary);
+}
+
+.form {
+  padding: 24px;
+}
+
+.parentInfo {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border: 1px dashed var(--border-glass);
+  font-size: 14px;
+}
+
+.parentLabel {
+  color: var(--text-secondary);
+  margin-right: 8px;
+}
+
+.parentValue {
+  color: var(--text-primary);
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.group {
+  flex: 1;
+  margin-bottom: 16px;
+}
+
+.row .group {
+  margin-bottom: 0;
+}
+
+.group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.group input,
+.group select {
+  width: 100%;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.group select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.group input:focus,
+.group select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.group select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-glass);
+}
+
+.btnCancel {
+  background: transparent;
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.btnCancel:hover {
+  background: var(--bg-card);
+}
+
+.btnSave {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.btnSave:hover {
+  background: var(--accent-hover);
+}

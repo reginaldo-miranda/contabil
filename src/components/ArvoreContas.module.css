@@ -1,0 +1,161 @@
+.treeContainer {
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 16px;
+  animation: fadeIn var(--transition);
+}
+
+.nodeContainer {
+  position: relative;
+}
+
+.nodeRow {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: var(--transition);
+  position: relative;
+  gap: 8px;
+}
+
+.nodeRow:hover {
+  background: var(--bg-card);
+}
+
+.nodeRow:hover .actions {
+  opacity: 1;
+}
+
+.matchRow {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid var(--accent);
+}
+
+.expandBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 10px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.expandBtn.expanded {
+  transform: rotate(90deg);
+}
+
+.expandBtn.invisible {
+  visibility: hidden;
+}
+
+.typeIcon {
+  font-size: 14px;
+}
+
+.codigo {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  width: 120px;
+}
+
+.nome {
+  font-size: 14px;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.ativo { color: var(--ativo); }
+.passivo { color: var(--passivo); }
+.pl { color: var(--pl); }
+.receita { color: var(--receita); }
+.despesa { color: var(--despesa); }
+
+.highlight {
+  background: rgba(250, 204, 21, 0.3);
+  color: #fde047;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.naturezaBadge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 12px;
+  margin-right: 12px;
+}
+
+.badgeD {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--ativo);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.badgeC {
+  background: rgba(251, 113, 133, 0.15);
+  color: var(--passivo);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.actionBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.actionBtn:hover {
+  background: var(--bg-glass);
+}
+
+.deleteBtn:hover {
+  background: rgba(251, 113, 133, 0.2);
+}
+
+.childrenContainer {
+  position: relative;
+  animation: expandIn 0.3s ease;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: var(--bg-glass);
+  border: 1px dashed var(--border-glass);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.emptyState h3 {
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}

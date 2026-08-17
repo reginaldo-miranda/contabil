@@ -1,0 +1,92 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+}
+
+.input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.suggestionsList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  margin-top: 4px;
+  padding: 8px 0;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+  backdrop-filter: var(--glass-blur);
+  list-style: none;
+}
+
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.suggestionItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.codigo {
+  font-family: monospace;
+  font-weight: 600;
+  font-size: 13px;
+  width: 100px;
+}
+
+.nome {
+  font-size: 13px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.noSuggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  z-index: 100;
+  margin-top: 4px;
+  text-align: center;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+}
+
+/* Color coding by accounting group */
+.ativo { color: var(--ativo); }
+.passivo { color: var(--passivo); }
+.pl { color: var(--pl); }
+.receita { color: var(--receita); }
+.despesa { color: var(--despesa); }

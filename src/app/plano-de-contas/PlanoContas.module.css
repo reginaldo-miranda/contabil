@@ -1,0 +1,128 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px 40px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.titleArea {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.titleIcon {
+  font-size: 32px;
+  background: var(--bg-glass);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-glass);
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.content {
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 24px;
+  min-height: calc(100vh - 160px);
+}
+
+.actionBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 12px;
+}
+
+.btnPrimary, .btnSecondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+}
+
+.btnPrimary {
+  background: var(--accent);
+  color: white;
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.btnIcon {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btnSecondary {
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+}
+
+.btnSecondary:hover {
+  background: var(--bg-card);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-glass);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  margin-bottom: 16px;
+  animation: spin 1s linear infinite;
+}
+
+.emptyState {
+  background: var(--bg-glass);
+  border: 1px dashed var(--border-glass);
+  border-radius: var(--radius);
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+}
