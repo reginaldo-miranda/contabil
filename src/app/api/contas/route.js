@@ -41,16 +41,47 @@ export async function POST(request) {
     if (!body.codigo || !body.nome || !body.empresaId) {
       return NextResponse.json({ erro: 'Código, nome e empresaId são obrigatórios' }, { status: 400 });
     }
+
+    const codigo = body.codigo.trim();
+    const empresaId = parseInt(body.empresaId);
+    let contaPaiId = body.contaPaiId || null;
+
+    // Se contaPaiId não foi informado, busca o pai pelo prefixo do código
+    if (!contaPaiId) {
+      const parts = codigo.split('.').filter(p => p !== '');
+      for (let i = parts.length - 1; i >= 1; i--) {
+        const parentCode = parts.slice(0, i).join('.');
+        const parentConta = await prisma.conta.findFirst({
+          where: { codigo: parentCode, empresaId, ativa: true }
+        });
+        if (parentConta) {
+          contaPaiId = parentConta.id;
+          break;
+        }
+      }
+    }
+
+    // Se tem conta pai e ela era Analítica, transforma em Sintética
+    if (contaPaiId) {
+      const parent = await prisma.conta.findUnique({ where: { id: contaPaiId } });
+      if (parent && parent.tipo === 'A') {
+        await prisma.conta.update({
+          where: { id: contaPaiId },
+          data: { tipo: 'S' }
+        });
+      }
+    }
+
     const conta = await prisma.conta.create({
       data: {
-        codigo: body.codigo.trim(),
+        codigo,
         nome: body.nome.trim(),
         tipo: body.tipo || 'A',
         natureza: body.natureza || 'D',
         nivel: body.nivel || 1,
         grupo: body.grupo || 'ATIVO',
-        contaPaiId: body.contaPaiId || null,
-        empresaId: parseInt(body.empresaId),
+        contaPaiId,
+        empresaId,
       },
     });
     return NextResponse.json(conta, { status: 201 });

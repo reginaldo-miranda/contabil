@@ -6,7 +6,7 @@ echo          INICIANDO CONTABILPRO
 echo ==========================================
 echo.
 echo 1. Acessando a pasta do projeto...
-cd /d C:\contabil
+cd /d D:\contabil
 echo.
 echo 2. Abrindo o navegador em http://localhost:3000...
 start "" "http://localhost:3000"

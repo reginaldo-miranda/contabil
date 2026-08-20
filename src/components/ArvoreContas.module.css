@@ -159,3 +159,51 @@
   color: var(--text-primary);
   margin-bottom: 8px;
 }
+
+/* ====== Estilos de impressão / Salvar PDF ====== */
+@media print {
+  .treeContainer {
+    background: white !important;
+    border: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+  }
+
+  .nodeRow {
+    padding: 4px 8px !important;
+  }
+
+  .nodeRow:hover {
+    background: none !important;
+  }
+
+  .codigo {
+    color: #000 !important;
+  }
+
+  .nome {
+    color: #000 !important;
+  }
+
+  .ativo, .passivo, .pl, .receita, .despesa {
+    color: #000 !important;
+  }
+
+  .naturezaBadge {
+    border: 1px solid #999 !important;
+    background: #eee !important;
+    color: #333 !important;
+  }
+
+  .actions {
+    display: none !important;
+  }
+
+  .expandBtn {
+    display: none !important;
+  }
+
+  .childrenContainer {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,22 @@
+<service>
+  <id>contabilpro-api</id>
+  <name>ContabilPro</name>
+  <description>Servidor do Sistema ContabilPro (Next.js)</description>
+
+  <!-- Usar o Node.js global instalado no sistema -->
+  <executable>C:\Program Files\nodejs\node.exe</executable>
+
+  <!-- Diretorio de execucao -->
+  <workingdirectory>%BASE%</workingdirectory>
+
+  <!-- Argumentos para iniciar o Next.js em modo producao -->
+  <arguments>node_modules\next\dist\bin\next start</arguments>
+
+  <startmode>Automatic</startmode>
+  <logmode>rotate</logmode>
+  <logpath>%BASE%\logs</logpath>
+
+  <!-- Variaveis de ambiente -->
+  <env name="DATABASE_URL" value="mysql://root:root@127.0.0.1:3306/contabil"/>
+  <env name="NODE_ENV" value="production"/>
+</service>

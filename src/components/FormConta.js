@@ -57,15 +57,10 @@ export default function FormConta({ conta, contaPai, empresaId, onSalvar, onFech
     // Auto-detect group based on first digit of code
     let calculatedGrupo = 'ATIVO';
     if (code.startsWith('1')) calculatedGrupo = 'ATIVO';
-    else if (code.startsWith('2.3') || code.startsWith('3')) calculatedGrupo = 'PL'; // Note: check your grouping logic
+    else if (code.startsWith('2.3')) calculatedGrupo = 'PL';
     else if (code.startsWith('2')) calculatedGrupo = 'PASSIVO';
-    else if (code.startsWith('3')) calculatedGrupo = 'RECEITA'; // wait, seed uses: '3' -> RECEITA, '4' -> DESPESA, '2.3' -> PL
+    else if (code.startsWith('3')) calculatedGrupo = 'RECEITA';
     else if (code.startsWith('4')) calculatedGrupo = 'DESPESA';
-    
-    // Adjust PL detection if code is 2.3
-    if (code.startsWith('2.3')) {
-      calculatedGrupo = 'PL';
-    }
 
     setFormData({
       ...formData,

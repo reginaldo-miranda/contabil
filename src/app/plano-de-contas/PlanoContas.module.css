@@ -126,3 +126,49 @@
   text-align: center;
   color: var(--text-secondary);
 }
+
+/* ====== Estilos de impressão / Salvar PDF ====== */
+@media print {
+  /* Esconde sidebar, botões, busca e seletor */
+  .layout > :first-child {
+    display: none !important;
+  }
+
+  .actionBar {
+    display: none !important;
+  }
+
+  .header > :last-child {
+    display: none !important;
+  }
+
+  /* Reseta layout para impressão */
+  .main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  .content {
+    background: white !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  /* Cores para impressão */
+  .layout {
+    background: white !important;
+  }
+
+  .title {
+    color: #000 !important;
+    font-size: 22px !important;
+  }
+
+  .subtitle {
+    color: #333 !important;
+  }
+
+  .titleIcon {
+    display: none !important;
+  }
+}

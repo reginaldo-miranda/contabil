@@ -1,15 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './ArvoreContas.module.css';
+
+const normalizeStr = (str) => 
+  str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
+
+const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const highlightText = (text, highlight) => {
   if (!highlight) return text;
-  const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-  return parts.map((part, index) => 
-    part.toLowerCase() === highlight.toLowerCase() ? 
-      <span key={index} className={styles.highlight}>{part}</span> : part
-  );
+  const escaped = escapeRegExp(highlight);
+  try {
+    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === highlight.toLowerCase() ? 
+        <span key={index} className={styles.highlight}>{part}</span> : part
+    );
+  } catch (e) {
+    return text;
+  }
 };
 
 const ContaNode = ({ 
@@ -24,14 +34,15 @@ const ContaNode = ({
   const [expanded, setExpanded] = useState(level <= 2);
   
   const hasChildren = conta.contasFilhas && conta.contasFilhas.length > 0;
-  const isSintetica = conta.tipo === 'S';
+  const isSintetica = conta.tipo === 'S' || hasChildren;
   
   const grupoClass = conta.grupo ? styles[conta.grupo.toLowerCase()] : '';
 
-  // Check if matches search
-  const matchesSearch = busca && (
-    conta.codigo.toLowerCase().includes(busca.toLowerCase()) || 
-    conta.nome.toLowerCase().includes(busca.toLowerCase())
+  // Check if matches search (case-insensitive e insensível a acentos)
+  const normBusca = normalizeStr(busca);
+  const matchesSearch = busca && normBusca.length > 0 && (
+    normalizeStr(conta.codigo).includes(normBusca) || 
+    normalizeStr(conta.nome).includes(normBusca)
   );
 
   // If searching and this or children match, keep expanded
@@ -40,6 +51,7 @@ const ContaNode = ({
   return (
     <div className={styles.nodeContainer}>
       <div 
+        data-match={matchesSearch ? "true" : undefined}
         className={`${styles.nodeRow} ${matchesSearch ? styles.matchRow : ''}`} 
         style={{ paddingLeft: `${level * 24}px` }}
       >
@@ -86,7 +98,6 @@ const ContaNode = ({
           {conta.contasFilhas.map((filha, index) => (
             <ContaNode 
               key={filha.id} 
-              filha={filha} // Wait, the key says key={filha.id} and we need to pass conta={filha}
               conta={filha} 
               level={level + 1}
               busca={busca}
@@ -103,6 +114,18 @@ const ContaNode = ({
 };
 
 export default function ArvoreContas({ contas, busca, onEditar, onExcluir, onAdicionarFilha }) {
+  useEffect(() => {
+    if (busca && busca.trim() !== '') {
+      const timer = setTimeout(() => {
+        const firstMatch = document.querySelector('[data-match="true"]');
+        if (firstMatch) {
+          firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [busca]);
+
   if (!contas || contas.length === 0) {
     return (
       <div className={styles.emptyState}>
