@@ -14,6 +14,7 @@ export default function Sidebar() {
     { href: '/balancete', label: 'Balancete', icon: '📄', disabled: false },
     { href: '/dre', label: 'DRE', icon: '📈', disabled: false },
     { href: '/balanco', label: 'Balanço Patrimonial', icon: '⚖️', disabled: false },
+    { href: '/backup', label: 'Backup & Restauração', icon: '💾', disabled: false },
   ];
 
   return (
@@ -32,7 +33,8 @@ export default function Sidebar() {
           const isBalancete = link.href === '/balancete' && pathname.startsWith('/balancete');
           const isDre = link.href === '/dre' && pathname.startsWith('/dre');
           const isBalanco = link.href === '/balanco' && pathname.startsWith('/balanco');
-          const activeClass = (isActive || isPlano || isLancamento || isBalancete || isDre || isBalanco || isDashboard) && !link.disabled ? styles.active : '';
+          const isBackup = link.href === '/backup' && pathname.startsWith('/backup');
+          const activeClass = (isActive || isPlano || isLancamento || isBalancete || isDre || isBalanco || isBackup || isDashboard) && !link.disabled ? styles.active : '';
 
           return link.disabled ? (
             <div key={index} className={`${styles.navItem} ${styles.disabled}`}>
