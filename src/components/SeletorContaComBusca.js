@@ -20,18 +20,39 @@ export default function SeletorContaComBusca({ contas, value, onChange, placehol
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  const selectedConta = contas.find(c => String(c.id) === String(value) || String(c.codigo) === String(value));
+  const selectedConta = (contas || []).find(c => String(c.id) === String(value) || String(c.codigo) === String(value));
 
-  const filteredContas = contas.filter(c => {
+  const filteredContas = (contas || []).filter(c => {
     if (!search || search.trim() === '') return true;
-    const normSearch = normalizeStr(search);
+    const normSearch = normalizeStr(search).trim();
     const cleanSearch = cleanCode(search);
 
-    const matchNome = normalizeStr(c.nome).includes(normSearch);
-    const matchCodigoNormal = normalizeStr(c.codigo).includes(normSearch);
-    const matchCodigoClean = cleanSearch !== '' && cleanCode(c.codigo).includes(cleanSearch);
+    const normNome = normalizeStr(c.nome);
+    const normCodigo = normalizeStr(c.codigo);
+    const cleanCodigoVal = cleanCode(c.codigo);
 
-    return matchNome || matchCodigoNormal || matchCodigoClean;
+    // 1. Busca por frase/termo completo
+    if (normNome.includes(normSearch) || normCodigo.includes(normSearch)) {
+      return true;
+    }
+    if (cleanSearch !== '' && cleanCodigoVal.includes(cleanSearch)) {
+      return true;
+    }
+
+    // 2. Busca por múltiplos termos/palavras (ex: "caixa ec" busca "caixa" E "ec")
+    const tokens = normSearch.split(/\s+/).filter(Boolean);
+    if (tokens.length > 1) {
+      return tokens.every(token => {
+        const cleanToken = cleanCode(token);
+        return (
+          normNome.includes(token) ||
+          normCodigo.includes(token) ||
+          (cleanToken !== '' && cleanCodigoVal.includes(cleanToken))
+        );
+      });
+    }
+
+    return false;
   });
 
   useEffect(() => {
