@@ -11,6 +11,8 @@ export default function Sidebar() {
     { href: '/', label: 'Dashboard', icon: '🏠', disabled: false },
     { href: '/plano-de-contas', label: 'Plano de Contas', icon: '📋', disabled: false },
     { href: '/lancamentos', label: 'Lançamentos', icon: '📝', disabled: false },
+    { href: '/diario', label: 'Livro Diário', icon: '📒', disabled: false },
+    { href: '/razao', label: 'Livro Razão', icon: '📖', disabled: false },
     { href: '/balancete', label: 'Balancete', icon: '📄', disabled: false },
     { href: '/dre', label: 'DRE', icon: '📈', disabled: false },
     { href: '/balanco', label: 'Balanço Patrimonial', icon: '⚖️', disabled: false },
@@ -26,15 +28,8 @@ export default function Sidebar() {
 
       <nav className={styles.nav}>
         {links.map((link, index) => {
-          const isActive = pathname === link.href;
-          const isDashboard = link.href === '/' && pathname === '/';
-          const isPlano = link.href === '/plano-de-contas' && pathname.startsWith('/plano-de-contas');
-          const isLancamento = link.href === '/lancamentos' && pathname.startsWith('/lancamentos');
-          const isBalancete = link.href === '/balancete' && pathname.startsWith('/balancete');
-          const isDre = link.href === '/dre' && pathname.startsWith('/dre');
-          const isBalanco = link.href === '/balanco' && pathname.startsWith('/balanco');
-          const isBackup = link.href === '/backup' && pathname.startsWith('/backup');
-          const activeClass = (isActive || isPlano || isLancamento || isBalancete || isDre || isBalanco || isBackup || isDashboard) && !link.disabled ? styles.active : '';
+          const isActive = pathname === link.href || 
+            (link.href !== '/' && pathname.startsWith(link.href));
 
           return link.disabled ? (
             <div key={index} className={`${styles.navItem} ${styles.disabled}`}>
@@ -43,7 +38,7 @@ export default function Sidebar() {
               <span className={styles.badge}>Em breve</span>
             </div>
           ) : (
-            <Link key={index} href={link.href} className={`${styles.navItem} ${activeClass}`}>
+            <Link key={index} href={link.href} className={`${styles.navItem} ${isActive ? styles.active : ''}`}>
               <span className={styles.icon}>{link.icon}</span>
               <span className={styles.label}>{link.label}</span>
             </Link>
@@ -52,7 +47,7 @@ export default function Sidebar() {
       </nav>
 
       <div className={styles.footer}>
-        <span>v1.0</span>
+        <span>v2.0 — Partida Dobrada</span>
       </div>
     </aside>
   );

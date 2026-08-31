@@ -1,188 +1,270 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import AutocompleteConta from './AutocompleteConta';
+import { useState, useMemo } from 'react';
+import { useContabil } from '../context/ContabilContext';
+import FormConta from './FormConta';
+import SeletorContaComBusca from './SeletorContaComBusca';
 import styles from './FormLancamento.module.css';
 
-export default function FormLancamento({ lancamento, empresaId, onSalvar, onFechar }) {
-  const isEdit = !!lancamento;
-  const [error, setError] = useState('');
+export default function FormLancamento({ onSalvar, onFechar }) {
+  const { getContasAnaliticas, refreshData } = useContabil();
+  const contas = getContasAnaliticas();
+
+  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [documento, setDocumento] = useState('');
+  const [historico, setHistorico] = useState('');
+  const [debitos, setDebitos] = useState([{ id: 1, contaId: '', valor: '' }]);
+  const [creditos, setCreditos] = useState([{ id: 2, contaId: '', valor: '' }]);
+  const [showFormConta, setShowFormConta] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [formData, setFormData] = useState({
-    data: new Date().toISOString().split('T')[0],
-    valor: '',
-    historico: '',
-    contaDebitoId: null,
-    contaCreditoId: null
-  });
+  // Totais
+  const totalDebitos = useMemo(() => {
+    return debitos.reduce((sum, d) => sum + (parseFloat(d.valor) || 0), 0);
+  }, [debitos]);
 
-  const [selectedDebito, setSelectedDebito] = useState(null);
-  const [selectedCredito, setSelectedCredito] = useState(null);
+  const totalCreditos = useMemo(() => {
+    return creditos.reduce((sum, c) => sum + (parseFloat(c.valor) || 0), 0);
+  }, [creditos]);
 
-  useEffect(() => {
-    if (lancamento) {
-      setFormData({
-        data: new Date(lancamento.data).toISOString().split('T')[0],
-        valor: lancamento.valor.toString(),
-        historico: lancamento.historico,
-        contaDebitoId: lancamento.contaDebitoId,
-        contaCreditoId: lancamento.contaCreditoId
-      });
-      setSelectedDebito(lancamento.contaDebito);
-      setSelectedCredito(lancamento.contaCredito);
-    } else {
-      setFormData({
-        data: new Date().toISOString().split('T')[0],
-        valor: '',
-        historico: '',
-        contaDebitoId: null,
-        contaCreditoId: null
-      });
-      setSelectedDebito(null);
-      setSelectedCredito(null);
+  const diferenca = Math.abs(totalDebitos - totalCreditos);
+  const isBalanced = totalDebitos > 0 && Math.abs(totalDebitos - totalCreditos) < 0.001;
+
+  // Handler Débitos
+  const handleAddDebito = () => {
+    setDebitos([...debitos, { id: Date.now(), contaId: '', valor: '' }]);
+  };
+  const handleRemoveDebito = (id) => {
+    if (debitos.length > 1) {
+      setDebitos(debitos.filter(d => d.id !== id));
     }
-  }, [lancamento]);
+  };
+  const handleDebitoChange = (id, field, value) => {
+    setDebitos(debitos.map(d => d.id === id ? { ...d, [field]: value } : d));
+    // Se for alteracao no valor e houver exatamente 1 Debito e 1 Credito, autopreenche o Credito
+    if (field === 'valor' && debitos.length === 1 && creditos.length === 1) {
+      setCreditos(creditos.map(c => ({ ...c, valor: value })));
+    }
+  };
+
+  // Handler Créditos
+  const handleAddCredito = () => {
+    setCreditos([...creditos, { id: Date.now(), contaId: '', valor: '' }]);
+  };
+  const handleRemoveCredito = (id) => {
+    if (creditos.length > 1) {
+      setCreditos(creditos.filter(c => c.id !== id));
+    }
+  };
+  const handleCreditoChange = (id, field, value) => {
+    setCreditos(creditos.map(c => c.id === id ? { ...c, [field]: value } : c));
+    // Se for alteracao no valor e houver exatamente 1 Debito e 1 Credito, autopreenche o Debito
+    if (field === 'valor' && debitos.length === 1 && creditos.length === 1) {
+      setDebitos(debitos.map(d => ({ ...d, valor: value })));
+    }
+  };
+
+  const isFormValid = () => {
+    if (!data || !documento || !historico) return false;
+    if (!isBalanced) return false;
+
+    for (let d of debitos) {
+      if (!d.contaId || !(parseFloat(d.valor) > 0)) return false;
+    }
+    for (let c of creditos) {
+      if (!c.contaId || !(parseFloat(c.valor) > 0)) return false;
+    }
+    return true;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.data || !formData.valor || !formData.historico || !formData.contaDebitoId || !formData.contaCreditoId) {
-      setError('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-
-    if (formData.contaDebitoId === formData.contaCreditoId) {
-      setError('A conta de débito não pode ser igual à conta de crédito.');
-      return;
-    }
+    if (!isFormValid()) return;
 
     setLoading(true);
-    setError('');
 
-    const payload = {
-      data: formData.data,
-      valor: parseFloat(formData.valor),
-      historico: formData.historico.trim(),
-      contaDebitoId: parseInt(formData.contaDebitoId),
-      contaCreditoId: parseInt(formData.contaCreditoId),
-      empresaId: parseInt(empresaId)
-    };
+    // Para compatibilidade com a API MySQL existente (salva a partida principal e lança os dados)
+    const success = await onSalvar({
+      data,
+      documento,
+      historico,
+      contaDebitoId: parseInt(debitos[0].contaId),
+      contaCreditoId: parseInt(creditos[0].contaId),
+      valor: totalDebitos,
+      debitos: debitos.map(d => ({ contaId: parseInt(d.contaId), valor: parseFloat(d.valor) })),
+      creditos: creditos.map(c => ({ contaId: parseInt(c.contaId), valor: parseFloat(c.valor) }))
+    });
 
-    try {
-      const url = isEdit ? `/api/lancamentos/${lancamento.id}` : '/api/lancamentos';
-      const method = isEdit ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        onSalvar(data);
-      } else {
-        setError(data.erro || 'Erro ao salvar o lançamento.');
-      }
-    } catch (err) {
-      console.error('Erro de conexão:', err);
-      setError('Erro de conexão ao tentar salvar o lançamento.');
-    } finally {
-      setLoading(false);
+    setLoading(false);
+    if (success) {
+      onFechar();
     }
   };
 
-  const handleSelectDebito = (conta) => {
-    setSelectedDebito(conta);
-    setFormData(prev => ({ ...prev, contaDebitoId: conta ? conta.id : null }));
+  const handleContaCriada = async (novaConta) => {
+    try {
+      const res = await fetch('/api/contas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...novaConta, empresaId: 1, tipo: 'A' })
+      });
+      if (res.ok) {
+        if (refreshData) await refreshData();
+        setShowFormConta(false);
+      } else {
+        const err = await res.json();
+        alert(err.erro || "Erro ao cadastrar nova conta");
+      }
+    } catch (e) {
+      alert("Erro ao salvar conta no banco");
+    }
   };
 
-  const handleSelectCredito = (conta) => {
-    setSelectedCredito(conta);
-    setFormData(prev => ({ ...prev, contaCreditoId: conta ? conta.id : null }));
-  };
+  const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.modal}>
-        <div className={styles.header}>
-          <h2>{isEdit ? 'Editar Lançamento' : 'Novo Lançamento'}</h2>
-          <button className={styles.closeBtn} onClick={onFechar}>✕</button>
+      <div className={styles.modal} style={{ maxWidth: '750px' }}>
+        <div className={styles.header} style={{ padding: '10px 16px' }}>
+          <h2 className={styles.title} style={{ fontSize: '1rem' }}>Lançamento por Partida Dobrada</h2>
+          <button type="button" className={styles.closeButton} onClick={onFechar}>&times;</button>
         </div>
 
-        {error && (
-          <div className={styles.errorMsg}>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.row}>
-            <div className={styles.group}>
+        <form onSubmit={handleSubmit} className={styles.form} style={{ padding: '12px 16px', gap: '8px', overflowY: 'auto', maxHeight: '78vh' }}>
+          <div className={styles.formGrid} style={{ gap: '10px' }}>
+            <div className={styles.formGroup}>
               <label>Data</label>
-              <input
-                type="date"
-                required
-                value={formData.data}
-                onChange={e => setFormData({ ...formData, data: e.target.value })}
+              <input 
+                type="date" 
+                value={data} 
+                onChange={e => setData(e.target.value)} 
+                required 
+                className={styles.input}
               />
             </div>
-
-            <div className={styles.group}>
-              <label>Valor (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                placeholder="0.00"
-                value={formData.valor}
-                onChange={e => setFormData({ ...formData, valor: e.target.value })}
+            <div className={styles.formGroup}>
+              <label>Documento / Ref.</label>
+              <input 
+                type="text" 
+                value={documento} 
+                onChange={e => setDocumento(e.target.value)} 
+                required 
+                className={styles.input}
+                placeholder="Ex: NF-00123"
               />
             </div>
           </div>
 
-          <div className={styles.group}>
-            <label>Conta de Débito (Aplicação dos Recursos)</label>
-            <AutocompleteConta
-              empresaId={empresaId}
-              onSelect={handleSelectDebito}
-              initialConta={selectedDebito}
-              placeholder="Busque a conta devedora..."
+          <div className={styles.formGroup}>
+            <label>Histórico Contábil</label>
+            <textarea 
+              value={historico} 
+              onChange={e => setHistorico(e.target.value)} 
+              required 
+              className={styles.textarea}
+              placeholder="Descrição do lançamento..."
+              rows={1}
+              style={{ minHeight: '36px', height: '36px' }}
             />
           </div>
 
-          <div className={styles.group}>
-            <label>Conta de Crédito (Origem dos Recursos)</label>
-            <AutocompleteConta
-              empresaId={empresaId}
-              onSelect={handleSelectCredito}
-              initialConta={selectedCredito}
-              placeholder="Busque a conta credora..."
-            />
-          </div>
-
-          <div className={styles.group}>
-            <label>Histórico (Descrição do Fato Contábil)</label>
-            <textarea
-              required
-              rows={3}
-              placeholder="Ex: Recebimento de clientes ref. venda conforme nota fiscal nº 1023."
-              value={formData.historico}
-              onChange={e => setFormData({ ...formData, historico: e.target.value })}
-            />
-          </div>
-
-          <div className={styles.actions}>
-            <button type="button" onClick={onFechar} className={styles.btnCancel} disabled={loading}>
-              Cancelar
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-primary)' }}>Partidas de Débito e Crédito</span>
+            <button 
+              type="button" 
+              onClick={() => setShowFormConta(true)}
+              style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+            >
+              + Nova Conta Analítica
             </button>
-            <button type="submit" className={styles.btnSave} disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar'}
+          </div>
+
+          {/* DÉBITOS */}
+          <div style={{ background: 'rgba(52, 211, 153, 0.05)', border: '1px solid rgba(52, 211, 153, 0.2)', padding: '8px 10px', borderRadius: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ color: 'var(--ativo)', fontWeight: 'bold', fontSize: '12px' }}>Contas de DÉBITO (D)</span>
+              <button type="button" onClick={handleAddDebito} style={{ background: 'var(--ativo)', color: '#000', border: 'none', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
+                + Add Débito
+              </button>
+            </div>
+            {debitos.map((item, idx) => (
+              <div key={item.id} style={{ display: 'flex', gap: '8px', marginBottom: idx === debitos.length - 1 ? 0 : '4px', alignItems: 'center' }}>
+                <SeletorContaComBusca 
+                  contas={contas}
+                  value={item.contaId}
+                  onChange={val => handleDebitoChange(item.id, 'contaId', val)}
+                  placeholder="Selecione a conta de débito..."
+                />
+                <input 
+                  type="number" step="0.01" min="0.01" value={item.valor} 
+                  onChange={e => handleDebitoChange(item.id, 'valor', e.target.value)}
+                  className={styles.input} style={{ width: '110px', padding: '4px 8px' }} placeholder="Valor" required
+                />
+                {debitos.length > 1 && (
+                  <button type="button" onClick={() => handleRemoveDebito(item.id)} style={{ background: 'transparent', color: '#fb7185', border: 'none', cursor: 'pointer', fontSize: '14px' }}>&times;</button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* CRÉDITOS */}
+          <div style={{ background: 'rgba(251, 113, 133, 0.05)', border: '1px solid rgba(251, 113, 133, 0.2)', padding: '8px 10px', borderRadius: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{ color: 'var(--passivo)', fontWeight: 'bold', fontSize: '12px' }}>Contas de CRÉDITO (C)</span>
+              <button type="button" onClick={handleAddCredito} style={{ background: 'var(--passivo)', color: '#000', border: 'none', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>
+                + Add Crédito
+              </button>
+            </div>
+            {creditos.map((item, idx) => (
+              <div key={item.id} style={{ display: 'flex', gap: '8px', marginBottom: idx === creditos.length - 1 ? 0 : '4px', alignItems: 'center' }}>
+                <SeletorContaComBusca 
+                  contas={contas}
+                  value={item.contaId}
+                  onChange={val => handleCreditoChange(item.id, 'contaId', val)}
+                  placeholder="Selecione a conta de crédito..."
+                />
+                <input 
+                  type="number" step="0.01" min="0.01" value={item.valor} 
+                  onChange={e => handleCreditoChange(item.id, 'valor', e.target.value)}
+                  className={styles.input} style={{ width: '110px', padding: '4px 8px' }} placeholder="Valor" required
+                />
+                {creditos.length > 1 && (
+                  <button type="button" onClick={() => handleRemoveCredito(item.id)} style={{ background: 'transparent', color: '#fb7185', border: 'none', cursor: 'pointer', fontSize: '14px' }}>&times;</button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* PAINEL DE BALANÇO (∑D = ∑C) */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: '6px', background: isBalanced ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 113, 133, 0.15)', border: `1px solid ${isBalanced ? 'var(--ativo)' : 'var(--passivo)'}`, fontSize: '12px' }}>
+            <div>
+              <span style={{ marginRight: '12px', color: 'var(--ativo)', fontWeight: 'bold' }}>Débitos: {formatCurrency(totalDebitos)}</span>
+              <span style={{ color: 'var(--passivo)', fontWeight: 'bold' }}>Créditos: {formatCurrency(totalCreditos)}</span>
+            </div>
+            <div>
+              {isBalanced ? (
+                <span style={{ color: 'var(--ativo)', fontWeight: 'bold' }}>✓ Equilibrado (D = C)</span>
+              ) : (
+                <span style={{ color: 'var(--passivo)', fontWeight: 'bold' }}>⚠️ Diferença: {formatCurrency(diferenca)}</span>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.footer} style={{ padding: '6px 0 0 0', background: 'transparent', borderTop: 'none' }}>
+            <button type="button" onClick={onFechar} className={styles.btnCancel} style={{ padding: '5px 12px', fontSize: '12px' }}>Cancelar</button>
+            <button type="submit" disabled={!isFormValid() || loading} className={styles.btnSave} style={{ padding: '5px 16px', fontSize: '12px' }}>
+              {loading ? 'Salvando...' : 'Salvar Lançamento (MySQL)'}
             </button>
           </div>
         </form>
+
+        {showFormConta && (
+          <FormConta 
+            empresaId={1}
+            onSalvar={handleContaCriada}
+            onFechar={() => setShowFormConta(false)}
+          />
+        )}
       </div>
     </div>
   );

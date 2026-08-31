@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './ArvoreContas.module.css';
 
-const normalizeStr = (str) => 
-  str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() : '';
-
-const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const normalizeStr = (str) => {
+  if (!str) return '';
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+};
 
 const highlightText = (text, highlight) => {
   if (!highlight) return text;
-  const escaped = escapeRegExp(highlight);
-  try {
-    const parts = text.split(new RegExp(`(${escaped})`, 'gi'));
-    return parts.map((part, index) => 
-      part.toLowerCase() === highlight.toLowerCase() ? 
-        <span key={index} className={styles.highlight}>{part}</span> : part
-    );
-  } catch (e) {
-    return text;
-  }
+  const normText = normalizeStr(text);
+  const normHighlight = normalizeStr(highlight);
+  if (!normText.includes(normHighlight)) return text;
+  
+  const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  return parts.map((part, index) => 
+    normalizeStr(part) === normHighlight ? 
+      <span key={index} className={styles.highlight}>{part}</span> : part
+  );
 };
 
 const ContaNode = ({ 
@@ -29,29 +29,49 @@ const ContaNode = ({
   onEditar, 
   onExcluir, 
   onAdicionarFilha,
-  isLast
+  isLast,
+  firstMatchId
 }) => {
   const [expanded, setExpanded] = useState(level <= 2);
+  const nodeRowRef = useRef(null);
   
-  const hasChildren = conta.contasFilhas && conta.contasFilhas.length > 0;
-  const isSintetica = conta.tipo === 'S' || hasChildren;
+  const filhas = conta.contasFilhas || conta.filhas || [];
+  const hasChildren = filhas.length > 0;
+  const isSintetica = conta.tipo === 'Sintética' || conta.tipo === 'S';
   
   const grupoClass = conta.grupo ? styles[conta.grupo.toLowerCase()] : '';
 
-  // Check if matches search (case-insensitive e insensível a acentos)
   const normBusca = normalizeStr(busca);
-  const matchesSearch = busca && normBusca.length > 0 && (
+  const matchesSearch = normBusca !== '' && (
     normalizeStr(conta.codigo).includes(normBusca) || 
     normalizeStr(conta.nome).includes(normBusca)
   );
 
-  // If searching and this or children match, keep expanded
-  const shouldExpand = busca ? true : expanded;
+  const isFirstMatch = firstMatchId && firstMatchId === conta.id;
+
+  useEffect(() => {
+    if (isFirstMatch && nodeRowRef.current) {
+      setTimeout(() => {
+        if (nodeRowRef.current) {
+          nodeRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    }
+  }, [isFirstMatch, busca]);
+
+  // Reset scroll and collapse state when search is cleared
+  useEffect(() => {
+    if (!busca || busca.trim() === '') {
+      setExpanded(level <= 2);
+    }
+  }, [busca, level]);
+
+  const shouldExpand = (busca && busca.trim() !== '') ? true : expanded;
 
   return (
     <div className={styles.nodeContainer}>
       <div 
-        data-match={matchesSearch ? "true" : undefined}
+        ref={nodeRowRef}
         className={`${styles.nodeRow} ${matchesSearch ? styles.matchRow : ''}`} 
         style={{ paddingLeft: `${level * 24}px` }}
       >
@@ -79,8 +99,8 @@ const ContaNode = ({
         </span>
         
         {conta.natureza && (
-          <span className={`${styles.naturezaBadge} ${conta.natureza === 'D' ? styles.badgeD : styles.badgeC}`}>
-            {conta.natureza === 'D' ? 'D' : 'C'}
+          <span className={`${styles.naturezaBadge} ${conta.natureza === 'Devedora' ? styles.badgeD : styles.badgeC}`}>
+            {conta.natureza === 'Devedora' ? 'D' : 'C'}
           </span>
         )}
         
@@ -95,7 +115,7 @@ const ContaNode = ({
       
       {isSintetica && shouldExpand && hasChildren && (
         <div className={styles.childrenContainer}>
-          {conta.contasFilhas.map((filha, index) => (
+          {filhas.map((filha, index) => (
             <ContaNode 
               key={filha.id} 
               conta={filha} 
@@ -104,7 +124,8 @@ const ContaNode = ({
               onEditar={onEditar}
               onExcluir={onExcluir}
               onAdicionarFilha={onAdicionarFilha}
-              isLast={index === conta.contasFilhas.length - 1}
+              isLast={index === filhas.length - 1}
+              firstMatchId={firstMatchId}
             />
           ))}
         </div>
@@ -114,17 +135,34 @@ const ContaNode = ({
 };
 
 export default function ArvoreContas({ contas, busca, onEditar, onExcluir, onAdicionarFilha }) {
+  const firstMatchIdRef = useRef(null);
+  const containerRef = useRef(null);
+
   useEffect(() => {
-    if (busca && busca.trim() !== '') {
-      const timer = setTimeout(() => {
-        const firstMatch = document.querySelector('[data-match="true"]');
-        if (firstMatch) {
-          firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    firstMatchIdRef.current = null;
+    if (!busca || busca.trim() === '') {
+      if (containerRef.current) {
+        containerRef.current.scrollTop = 0;
+      }
+    } else if (contas && contas.length > 0) {
+      const normB = normalizeStr(busca);
+      const findFirst = (nodes) => {
+        for (let n of nodes) {
+          const match = normalizeStr(n.codigo).includes(normB) || normalizeStr(n.nome).includes(normB);
+          if (match) {
+            return n.id;
+          }
+          const filhas = n.contasFilhas || n.filhas || [];
+          if (filhas.length > 0) {
+            const childMatch = findFirst(filhas);
+            if (childMatch) return childMatch;
+          }
         }
-      }, 100);
-      return () => clearTimeout(timer);
+        return null;
+      };
+      firstMatchIdRef.current = findFirst(contas);
     }
-  }, [busca]);
+  }, [busca, contas]);
 
   if (!contas || contas.length === 0) {
     return (
@@ -136,8 +174,10 @@ export default function ArvoreContas({ contas, busca, onEditar, onExcluir, onAdi
     );
   }
 
+
+
   return (
-    <div className={styles.treeContainer}>
+    <div ref={containerRef} className={styles.treeContainer}>
       {contas.map((conta, index) => (
         <ContaNode 
           key={conta.id} 
@@ -148,6 +188,7 @@ export default function ArvoreContas({ contas, busca, onEditar, onExcluir, onAdi
           onExcluir={onExcluir}
           onAdicionarFilha={onAdicionarFilha}
           isLast={index === contas.length - 1}
+          firstMatchId={firstMatchIdRef.current}
         />
       ))}
     </div>

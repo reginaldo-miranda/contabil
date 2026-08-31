@@ -27,6 +27,11 @@
   transition: var(--transition);
 }
 
+.select option {
+  background-color: #1a1a24;
+  color: #ffffff;
+}
+
 .select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-glow);

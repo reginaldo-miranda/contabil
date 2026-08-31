@@ -1,14 +1,13 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--bg-primary);
 }
 
 .main {
   flex: 1;
   margin-left: 260px;
-  padding: 40px;
+  padding: 32px 40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -20,161 +19,84 @@
   align-items: center;
 }
 
-.titleArea {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.titleIcon {
-  font-size: 32px;
-}
-
 .title {
-  font-size: 24px;
+  margin: 0;
+  font-size: 2rem;
+  color: var(--text-primary);
   font-weight: 700;
-  background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 2px;
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
 }
 
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  animation: fadeIn var(--transition);
-}
-
-.errorArea {
-  background: rgba(244, 63, 94, 0.1);
-  border: 1px solid #f43f5e;
-  color: #f43f5e;
-  padding: 12px;
+.btnPrimary {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 12px 24px;
   border-radius: 8px;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(129, 140, 248, 0.2);
 }
 
-.filterCard {
-  background: var(--bg-glass);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius);
-  padding: 20px;
+.btnPrimary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 6px 16px var(--accent-glow);
+  transform: translateY(-1px);
 }
 
-.filterGrid {
+.filterBar {
   display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 20px;
+  background: var(--bg-card);
+  padding: 16px 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-glass);
 }
 
 .filterGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1;
-  min-width: 150px;
+  gap: 6px;
 }
 
 .filterGroup label {
-  font-size: 12px;
-  font-weight: 500;
   color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.filterInput {
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.05);
+.input {
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border-glass);
   border-radius: 6px;
+  padding: 8px 12px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.input:focus {
   outline: none;
-  transition: var(--transition);
-  width: 100%;
-}
-
-.filterInput:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 
-.autocompleteWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.clearFilterBtn {
-  position: absolute;
-  right: 10px;
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 12px;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: var(--transition);
-}
-
-.clearFilterBtn:hover {
-  color: var(--text-primary);
-  background: var(--bg-glass);
-}
-
-.btnArea {
-  display: flex;
-  align-items: flex-end;
-  height: 100%;
-}
-
-.btnPrimary {
-  padding: 10px 20px;
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.btnPrimary:hover {
-  background: var(--accent-hover);
-  box-shadow: 0 0 15px var(--accent-glow);
-}
-
-.loadingState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: var(--text-secondary);
-  gap: 12px;
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border-glass);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.content {
+  flex: 1;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-glass);
+  padding: 24px;
+  min-height: 400px;
 }
 
 .emptyState {
@@ -182,182 +104,198 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-  background: var(--bg-glass);
-  border: 1px dashed var(--border-glass);
-  border-radius: var(--radius);
+  height: 100%;
   color: var(--text-secondary);
+  text-align: center;
+  padding: 40px;
 }
 
 .emptyIcon {
-  font-size: 48px;
+  font-size: 4rem;
   margin-bottom: 16px;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 
 .emptyState h3 {
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin: 0 0 8px;
+  font-size: 1.25rem;
 }
 
-.tableWrapper {
-  background: var(--bg-glass);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius);
-  padding: 16px;
+.emptyState p {
+  margin: 0;
+  max-width: 300px;
+}
+
+.lancamentosList {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-x: auto;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.table th {
-  padding: 14px 16px;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  font-weight: 600;
-  border-bottom: 1px solid var(--border-glass);
-  letter-spacing: 0.05em;
-}
-
-.table td {
-  padding: 14px 16px;
-  font-size: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-  vertical-align: middle;
-}
-
-.tableRow {
-  transition: var(--transition);
-}
-
-.tableRow:hover {
+.lancamentoCard {
   background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: var(--transition);
+  animation: slideUp 0.3s ease-out backwards;
 }
 
-.dateCol {
-  color: var(--text-secondary);
-  font-family: monospace;
-  font-size: 13.5px;
+.lancamentoCard:nth-child(1) { animation-delay: 0.05s; }
+.lancamentoCard:nth-child(2) { animation-delay: 0.1s; }
+.lancamentoCard:nth-child(3) { animation-delay: 0.15s; }
+.lancamentoCard:nth-child(4) { animation-delay: 0.2s; }
+
+.lancamentoCard:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.cardHeader {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.cardHeader:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cardInfo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.date {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.875rem;
   white-space: nowrap;
 }
 
-.contaCol {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.contaCodigo {
-  font-family: monospace;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.contaNome {
-  font-size: 13px;
+.doc {
   color: var(--text-secondary);
+  font-size: 0.875rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-glass);
+  white-space: nowrap;
 }
 
-.historicoCol {
-  color: var(--text-secondary);
-  max-width: 250px;
+.hist {
+  color: var(--text-primary);
+  font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 500px;
 }
 
-.valueCol {
-  text-align: right;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: monospace;
-}
-
-.actionsCol {
-  text-align: center;
-}
-
-.actionsGroup {
+.cardActions {
   display: flex;
-  justify-content: center;
-  gap: 6px;
+  align-items: center;
+  gap: 16px;
 }
 
-.actionBtn {
+.expandIcon {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.btnDelete {
   background: transparent;
   border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
   cursor: pointer;
-  font-size: 14px;
-  padding: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 4px;
   transition: var(--transition);
 }
 
-.actionBtn:hover {
-  background: var(--bg-glass);
+.btnDelete:hover {
+  background: rgba(251, 113, 133, 0.1);
+  color: var(--passivo);
 }
 
-.deleteBtn:hover {
-  background: rgba(251, 113, 133, 0.2);
+.partidasList {
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.pagination {
+.partidaItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-glass);
-}
-
-.pageBtn {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-glass);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
   border-radius: 6px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  transition: var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.pageBtn:hover:not(:disabled) {
-  background: var(--bg-glass);
+.partidaInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.debitoTag, .creditoTag {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.debitoTag {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--ativo);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.creditoTag {
+  background: rgba(251, 113, 133, 0.15);
+  color: var(--passivo);
+  border: 1px solid rgba(251, 113, 133, 0.3);
+}
+
+.contaCodigo {
+  color: var(--text-secondary);
+  font-family: monospace;
+  font-size: 0.875rem;
+}
+
+.contaNome {
   color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-.pageBtn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.partidaValor {
+  font-family: monospace;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
-.pageInfo {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* Group colors matching other components */
-.ativo { color: var(--ativo); }
-.passivo { color: var(--passivo); }
-.pl { color: var(--pl); }
-.receita { color: var(--receita); }
-.despesa { color: var(--despesa); }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

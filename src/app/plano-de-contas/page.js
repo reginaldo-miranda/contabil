@@ -16,32 +16,26 @@ export default function PlanoContas() {
   const [editingConta, setEditingConta] = useState(null);
   const [contaPai, setContaPai] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (empresaId) {
-      loadContas(empresaId);
+      loadContas();
     } else {
       setContas([]);
     }
   }, [empresaId]);
 
-  const loadContas = async (id = empresaId) => {
-    if (!id) return;
+  const loadContas = async () => {
+    if (!empresaId) return;
     setLoading(true);
-    setError('');
     try {
-      const res = await fetch(`/api/contas/arvore?empresaId=${id}`);
+      const res = await fetch(`/api/contas/arvore?empresaId=${empresaId}`);
       if (res.ok) {
         const data = await res.json();
         setContas(data);
-      } else {
-        const errData = await res.json();
-        setError(errData.erro || 'Erro ao carregar o plano de contas');
       }
-    } catch (err) {
-      console.error('Erro de conexão:', err);
-      setError('Erro de conexão ao buscar plano de contas');
+    } catch (e) {
+      console.error("Erro ao carregar árvore de contas:", e);
     } finally {
       setLoading(false);
     }
@@ -50,23 +44,20 @@ export default function PlanoContas() {
   const handleCarregarPlano = async () => {
     if (!empresaId) return;
     setLoading(true);
-    setError('');
     try {
-      const res = await fetch('/api/contas/seed', {
+      const res = await fetch(`/api/contas/seed`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ empresaId }),
+        body: JSON.stringify({ empresaId: parseInt(empresaId) })
       });
-      const data = await res.json();
       if (res.ok) {
-        loadContas(empresaId);
+        await loadContas();
       } else {
-        setError(data.erro || 'Erro ao carregar o plano padrão CFC');
-        setLoading(false);
+        alert("Erro ao carregar plano padrão");
       }
-    } catch (err) {
-      console.error('Erro de conexão:', err);
-      setError('Erro de conexão ao carregar o plano padrão');
+    } catch (e) {
+      alert("Erro ao conectar à API");
+    } finally {
       setLoading(false);
     }
   };
@@ -91,30 +82,50 @@ export default function PlanoContas() {
 
   const handleExcluir = async (conta) => {
     if (window.confirm(`Tem certeza que deseja excluir a conta ${conta.codigo} - ${conta.nome}?`)) {
-      setLoading(true);
-      setError('');
       try {
-        const res = await fetch(`/api/contas/${conta.id}`, {
-          method: 'DELETE',
-        });
-        const data = await res.json();
+        const res = await fetch(`/api/contas/${conta.id}`, { method: 'DELETE' });
         if (res.ok) {
-          loadContas(empresaId);
+          loadContas();
         } else {
-          setError(data.erro || 'Erro ao excluir conta');
-          setLoading(false);
+          const err = await res.json();
+          alert(err.erro || "Erro ao excluir conta");
         }
-      } catch (err) {
-        console.error('Erro de conexão:', err);
-        setError('Erro de conexão ao tentar excluir conta');
-        setLoading(false);
+      } catch (e) {
+        alert("Erro ao excluir conta no banco");
       }
     }
   };
 
-  const handleSalvar = () => {
-    setShowForm(false);
-    loadContas(empresaId);
+  const handleSalvar = async (dados) => {
+    try {
+      const isEdit = !!editingConta;
+      const url = isEdit ? `/api/contas/${editingConta.id}` : '/api/contas';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      const body = {
+        ...dados,
+        empresaId: parseInt(empresaId),
+        contaPaiId: contaPai ? contaPai.id : dados.contaPaiId,
+        tipo: dados.tipo === 'Sintética' ? 'S' : (dados.tipo === 'Analítica' ? 'A' : dados.tipo),
+        natureza: dados.natureza === 'Devedora' ? 'D' : (dados.natureza === 'Credora' ? 'C' : dados.natureza)
+      };
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        setShowForm(false);
+        loadContas();
+      } else {
+        const err = await res.json();
+        alert(err.erro || "Erro ao salvar conta");
+      }
+    } catch (e) {
+      alert("Erro ao conectar à API");
+    }
   };
 
   return (
@@ -135,17 +146,11 @@ export default function PlanoContas() {
 
         {empresaId ? (
           <div className={styles.content}>
-            {error && (
-              <div className={styles.errorArea} style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid #f43f5e', color: '#f43f5e', padding: '12px', borderRadius: '8px', marginBottom: '20px' }}>
-                {error}
-              </div>
-            )}
-
             <div className={styles.actionBar}>
               <BarraBusca onBusca={setBusca} />
               
               <div className={styles.actionButtons}>
-                {contas.length === 0 && !loading && (
+                {contas.length === 0 && (
                   <button onClick={handleCarregarPlano} className={styles.btnSecondary}>
                     Carregar Plano CFC
                   </button>
@@ -153,11 +158,6 @@ export default function PlanoContas() {
                 <button onClick={handleNovaConta} className={styles.btnPrimary}>
                   <span className={styles.btnIcon}>+</span> Nova Conta
                 </button>
-                {contas.length > 0 && (
-                  <button onClick={() => window.print()} className={styles.btnSecondary}>
-                    🖨️ Salvar PDF
-                  </button>
-                )}
               </div>
             </div>
 
