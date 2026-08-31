@@ -1,7 +1,7 @@
 'use client';
 import { useState, useMemo } from 'react';
 import Sidebar from '../../components/Sidebar';
-import styles from './DRE.module.css';
+import styles from './Dre.module.css';
 import { useContabil } from '../../context/ContabilContext';
 
 export default function DRE() {

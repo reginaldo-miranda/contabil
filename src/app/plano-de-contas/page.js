@@ -158,6 +158,11 @@ export default function PlanoContas() {
                 <button onClick={handleNovaConta} className={styles.btnPrimary}>
                   <span className={styles.btnIcon}>+</span> Nova Conta
                 </button>
+                {contas.length > 0 && (
+                  <button onClick={() => window.print()} className={styles.btnSecondary}>
+                    🖨️ Salvar PDF
+                  </button>
+                )}
               </div>
             </div>
 
