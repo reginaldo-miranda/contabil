@@ -1,0 +1,177 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary, #0a0a0f);
+  color: var(--text-primary, #e4e4e7);
+}
+
+.main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px 40px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.headerTitle h1 {
+  font-size: 2rem;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+.headerTitle p {
+  margin: 0;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 32px;
+  background: var(--bg-glass, rgba(255, 255, 255, 0.05));
+  padding: 16px 24px;
+  border-radius: var(--radius, 12px);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  backdrop-filter: var(--glass-blur, blur(20px));
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.filterGroup label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.input, .select {
+  background: var(--bg-secondary, #12121a);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #e4e4e7);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition, all 0.2s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.input:focus, .select:focus {
+  border-color: var(--accent, #818cf8);
+  box-shadow: 0 0 0 2px var(--accent-glow, rgba(129, 140, 248, 0.15));
+}
+
+.accountHeader {
+  padding: 24px;
+  border-radius: var(--radius, 12px) var(--radius, 12px) 0 0;
+  background: var(--bg-card, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.accountHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent, #818cf8);
+}
+
+.grupoAtivo::before { background: var(--ativo, #34d399); }
+.grupoPassivo::before { background: var(--passivo, #fb7185); }
+.grupoPl::before { background: var(--pl, #60a5fa); }
+.grupoReceita::before { background: var(--receita, #2dd4bf); }
+.grupoDespesa::before { background: var(--despesa, #fbbf24); }
+
+.accountInfo h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  color: var(--text-primary, #e4e4e7);
+}
+
+.accountMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.tableContainer {
+  background: var(--bg-card, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  border-radius: 0 0 var(--radius, 12px) var(--radius, 12px);
+  overflow-x: auto;
+}
+
+.transactionsTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.transactionsTable th, .transactionsTable td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+}
+
+.transactionsTable th {
+  color: var(--accent, #818cf8);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  background: var(--bg-glass, rgba(255, 255, 255, 0.05));
+}
+
+.transactionsTable tbody tr:hover {
+  background: var(--bg-glass, rgba(255, 255, 255, 0.05));
+}
+
+.numberCol {
+  text-align: right !important;
+}
+
+.saldoPositivo {
+  color: var(--ativo, #34d399);
+}
+
+.saldoNegativo {
+  color: var(--passivo, #fb7185);
+}
+
+.saldoAnteriorRow {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.saldoFinalRow {
+  background: var(--accent-glow, rgba(129, 140, 248, 0.15));
+}
+
+.saldoFinalRow td {
+  color: #fff;
+  border-bottom: none;
+}
+
+.emptyTable {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted, #71717a);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .main {
+    margin-left: 0;
+    padding: 16px;
+  }
+}

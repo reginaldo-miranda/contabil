@@ -1,0 +1,184 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary, #0a0a0f);
+  color: var(--text-primary, #e4e4e7);
+}
+
+.main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px 40px;
+}
+
+.header {
+  margin-bottom: 32px;
+}
+
+.headerTitle h1 {
+  font-size: 2rem;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+.headerTitle p {
+  margin: 0;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.filterBar {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  background: var(--bg-glass, rgba(255, 255, 255, 0.05));
+  padding: 16px 24px;
+  border-radius: var(--radius, 12px);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  backdrop-filter: var(--glass-blur, blur(20px));
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterGroup label {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.input {
+  background: var(--bg-secondary, #12121a);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  color: var(--text-primary, #e4e4e7);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition, all 0.2s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.input:focus {
+  border-color: var(--accent, #818cf8);
+  box-shadow: 0 0 0 2px var(--accent-glow, rgba(129, 140, 248, 0.15));
+}
+
+.lancamentosList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lancamentoEntry {
+  background: var(--bg-card, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius, 12px);
+  padding: 24px;
+  animation: slideUp 0.4s ease-out;
+  border-bottom: 2px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+}
+
+.lancamentoHeader {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+}
+
+.lancamentoDate {
+  font-weight: 600;
+  color: var(--accent, #818cf8);
+}
+
+.lancamentoDoc {
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.lancamentoHist {
+  flex: 1;
+}
+
+.partidasTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.partidasTable th, .partidasTable td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+}
+
+.partidasTable th {
+  color: var(--accent, #818cf8);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.partidasTable tbody tr:hover {
+  background: var(--bg-glass, rgba(255, 255, 255, 0.05));
+}
+
+.debitoCol {
+  text-align: right !important;
+  color: var(--text-primary, #e4e4e7);
+}
+
+.creditoCol {
+  text-align: right !important;
+  color: var(--text-primary, #e4e4e7);
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--accent, #818cf8);
+  color: #fff;
+  padding: 20px 24px;
+  border-radius: var(--radius, 12px);
+  margin-top: 16px;
+}
+
+.totalLabel {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.totalValues {
+  display: flex;
+  gap: 32px;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.emptyState {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-secondary, #a1a1aa);
+  background: var(--bg-card, rgba(255, 255, 255, 0.03));
+  border-radius: var(--radius, 12px);
+  border: 1px dashed var(--border-glass, rgba(255, 255, 255, 0.08));
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media print {
+  .layout { display: block; background: #fff; color: #000; }
+  .main { margin: 0; padding: 0; }
+  .filterBar { display: none; }
+  .lancamentoEntry { border-color: #ccc; break-inside: avoid; }
+  .totalRow { background: #eee; color: #000; }
+}
