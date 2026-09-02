@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import SeletorEmpresa from './SeletorEmpresa';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -24,6 +25,10 @@ export default function Sidebar() {
       <div className={styles.logoArea}>
         <span className={styles.logoIcon}>📊</span>
         <span className={styles.logoText}>ContábilPro</span>
+      </div>
+
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-glass)' }}>
+        <SeletorEmpresa />
       </div>
 
       <nav className={styles.nav}>

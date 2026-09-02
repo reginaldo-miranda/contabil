@@ -8,8 +8,7 @@ import { useContabil } from '../context/ContabilContext';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
-  const [empresaId, setEmpresaId] = useState(null);
-  const { getStats, lancamentos } = useContabil();
+  const { empresaId, getStats, lancamentos } = useContabil();
 
   const stats = getStats();
 
@@ -35,7 +34,7 @@ export default function Dashboard() {
             <h1 className={styles.title}>Dashboard</h1>
             <p className={styles.subtitle}>Visão geral do sistema contábil</p>
           </div>
-          <SeletorEmpresa onEmpresaChange={setEmpresaId} />
+          <SeletorEmpresa />
         </header>
 
         {!empresaId ? (

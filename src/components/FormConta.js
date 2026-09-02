@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useContabil } from '../context/ContabilContext';
 import styles from './FormConta.module.css';
 
-export default function FormConta({ conta, contaPai, empresaId, onSalvar, onFechar }) {
+export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, onSalvar, onFechar }) {
+  const { empresaId: empresaIdContext } = useContabil();
+  const empresaId = empresaIdProp || empresaIdContext;
   const isEdit = !!conta;
   
   const [formData, setFormData] = useState({

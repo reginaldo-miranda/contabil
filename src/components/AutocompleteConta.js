@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useContabil } from '../context/ContabilContext';
 import styles from './AutocompleteConta.module.css';
 
-export default function AutocompleteConta({ empresaId, onSelect, initialConta, placeholder }) {
+export default function AutocompleteConta({ empresaId: empresaIdProp, onSelect, initialConta, placeholder }) {
+  const { empresaId: empresaIdContext } = useContabil();
+  const empresaId = empresaIdProp || empresaIdContext;
   const [contas, setContas] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState([]);

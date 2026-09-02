@@ -6,10 +6,11 @@ import SeletorEmpresa from '../../components/SeletorEmpresa';
 import BarraBusca from '../../components/BarraBusca';
 import ArvoreContas from '../../components/ArvoreContas';
 import FormConta from '../../components/FormConta';
+import { useContabil } from '../../context/ContabilContext';
 import styles from './PlanoContas.module.css';
 
 export default function PlanoContas() {
-  const [empresaId, setEmpresaId] = useState(null);
+  const { empresaId, refreshData } = useContabil();
   const [contas, setContas] = useState([]);
   const [busca, setBusca] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -52,6 +53,7 @@ export default function PlanoContas() {
       });
       if (res.ok) {
         await loadContas();
+        if (refreshData) await refreshData();
       } else {
         alert("Erro ao carregar plano padrão");
       }
@@ -85,7 +87,8 @@ export default function PlanoContas() {
       try {
         const res = await fetch(`/api/contas/${conta.id}`, { method: 'DELETE' });
         if (res.ok) {
-          loadContas();
+          await loadContas();
+          if (refreshData) await refreshData();
         } else {
           const err = await res.json();
           alert(err.erro || "Erro ao excluir conta");
@@ -118,7 +121,8 @@ export default function PlanoContas() {
 
       if (res.ok) {
         setShowForm(false);
-        loadContas();
+        await loadContas();
+        if (refreshData) await refreshData();
       } else {
         const err = await res.json();
         alert(err.erro || "Erro ao salvar conta");
@@ -141,7 +145,7 @@ export default function PlanoContas() {
               <p className={styles.subtitle}>Estrutura contábil da empresa</p>
             </div>
           </div>
-          <SeletorEmpresa onEmpresaChange={setEmpresaId} />
+          <SeletorEmpresa />
         </header>
 
         {empresaId ? (

@@ -7,7 +7,7 @@ import SeletorContaComBusca from './SeletorContaComBusca';
 import styles from './FormLancamento.module.css';
 
 export default function FormLancamento({ onSalvar, onFechar }) {
-  const { getContasAnaliticas, refreshData } = useContabil();
+  const { empresaId, getContasAnaliticas, refreshData } = useContabil();
   const contas = getContasAnaliticas();
 
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
@@ -28,7 +28,8 @@ export default function FormLancamento({ onSalvar, onFechar }) {
   }, [creditos]);
 
   const diferenca = Math.abs(totalDebitos - totalCreditos);
-  const isBalanced = totalDebitos > 0 && Math.abs(totalDebitos - totalCreditos) < 0.001;
+  const hasValues = totalDebitos > 0 || totalCreditos > 0;
+  const isBalanced = totalDebitos > 0 && diferenca < 0.001;
 
   // Handler Débitos
   const handleAddDebito = () => {
@@ -88,6 +89,7 @@ export default function FormLancamento({ onSalvar, onFechar }) {
       data,
       documento,
       historico,
+      empresaId: parseInt(empresaId),
       contaDebitoId: parseInt(debitos[0].contaId),
       contaCreditoId: parseInt(creditos[0].contaId),
       valor: totalDebitos,
@@ -106,7 +108,7 @@ export default function FormLancamento({ onSalvar, onFechar }) {
       const res = await fetch('/api/contas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...novaConta, empresaId: 1, tipo: 'A' })
+        body: JSON.stringify({ ...novaConta, empresaId: parseInt(empresaId), tipo: 'A' })
       });
       if (res.ok) {
         if (refreshData) await refreshData();
@@ -236,13 +238,24 @@ export default function FormLancamento({ onSalvar, onFechar }) {
           </div>
 
           {/* PAINEL DE BALANÇO (∑D = ∑C) */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', borderRadius: '6px', background: isBalanced ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 113, 133, 0.15)', border: `1px solid ${isBalanced ? 'var(--ativo)' : 'var(--passivo)'}`, fontSize: '12px' }}>
+          <div style={{ 
+            display: 'flex', 
+            justify: 'space-between', 
+            alignItems: 'center', 
+            padding: '6px 10px', 
+            borderRadius: '6px', 
+            background: !hasValues ? 'rgba(255, 255, 255, 0.05)' : (isBalanced ? 'rgba(52, 211, 153, 0.15)' : 'rgba(251, 113, 133, 0.15)'), 
+            border: `1px solid ${!hasValues ? 'var(--border-glass)' : (isBalanced ? 'var(--ativo)' : 'var(--passivo)')}`, 
+            fontSize: '12px' 
+          }}>
             <div>
               <span style={{ marginRight: '12px', color: 'var(--ativo)', fontWeight: 'bold' }}>Débitos: {formatCurrency(totalDebitos)}</span>
               <span style={{ color: 'var(--passivo)', fontWeight: 'bold' }}>Créditos: {formatCurrency(totalCreditos)}</span>
             </div>
             <div>
-              {isBalanced ? (
+              {!hasValues ? (
+                <span style={{ color: 'var(--text-muted)' }}>ℹ️ Preencha as contas e valores</span>
+              ) : isBalanced ? (
                 <span style={{ color: 'var(--ativo)', fontWeight: 'bold' }}>✓ Equilibrado (D = C)</span>
               ) : (
                 <span style={{ color: 'var(--passivo)', fontWeight: 'bold' }}>⚠️ Diferença: {formatCurrency(diferenca)}</span>
@@ -260,7 +273,7 @@ export default function FormLancamento({ onSalvar, onFechar }) {
 
         {showFormConta && (
           <FormConta 
-            empresaId={1}
+            empresaId={parseInt(empresaId)}
             onSalvar={handleContaCriada}
             onFechar={() => setShowFormConta(false)}
           />

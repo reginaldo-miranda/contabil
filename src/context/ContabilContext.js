@@ -183,25 +183,65 @@ function flattenContas(contas) {
 // PROVIDER
 // ==========================================
 export function ContabilProvider({ children }) {
+  const [empresas, setEmpresas] = useState([]);
+  const [empresaId, setEmpresaIdState] = useState(null);
   const [contas, setContas] = useState(PLANO_CONTAS_MOCK);
   const [lancamentos, setLancamentos] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Load from API on mount/empresa change
+  // Carregar lista de empresas e restaurar a seleção salva
+  const loadEmpresas = useCallback(async () => {
+    try {
+      const res = await fetch('/api/empresas');
+      if (res.ok) {
+        const data = await res.json();
+        setEmpresas(data);
+        if (data.length > 0) {
+          const savedId = typeof window !== 'undefined' ? localStorage.getItem('contabil_empresa_id') : null;
+          const exists = data.some(e => e.id.toString() === savedId);
+          const initialId = exists ? savedId : data[0].id.toString();
+          setEmpresaIdState(initialId);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('contabil_empresa_id', initialId);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao carregar empresas:", e);
+    }
+  }, []);
+
   useEffect(() => {
+    loadEmpresas();
+  }, [loadEmpresas]);
+
+  const setEmpresaId = useCallback((id) => {
+    const idStr = id ? id.toString() : null;
+    setEmpresaIdState(idStr);
+    if (typeof window !== 'undefined' && idStr) {
+      localStorage.setItem('contabil_empresa_id', idStr);
+    }
+  }, []);
+
+  // Load from API on empresa change
+  useEffect(() => {
+    if (!empresaId) return;
+
     async function loadData() {
       try {
         const [resContas, resLanc] = await Promise.all([
-          fetch('/api/contas?empresaId=1').then(r => r.ok ? r.json() : []),
-          fetch('/api/lancamentos?empresaId=1').then(r => r.ok ? r.json() : { lancamentos: [] })
+          fetch(`/api/contas?empresaId=${empresaId}`).then(r => r.ok ? r.json() : []),
+          fetch(`/api/lancamentos?empresaId=${empresaId}`).then(r => r.ok ? r.json() : { lancamentos: [] })
         ]);
         if (resContas && resContas.length > 0) {
           setContas(resContas);
         } else {
-          setContas(PLANO_CONTAS_MOCK);
+          setContas([]);
         }
         if (resLanc && resLanc.lancamentos) {
           setLancamentos(resLanc.lancamentos);
+        } else {
+          setLancamentos([]);
         }
       } catch (e) {
         console.error("Erro ao carregar dados do banco:", e);
@@ -210,20 +250,21 @@ export function ContabilProvider({ children }) {
       }
     }
     loadData();
-  }, []);
+  }, [empresaId]);
 
   const refreshData = useCallback(async () => {
+    if (!empresaId) return;
     try {
       const [resContas, resLanc] = await Promise.all([
-        fetch('/api/contas?empresaId=1').then(r => r.ok ? r.json() : []),
-        fetch('/api/lancamentos?empresaId=1').then(r => r.ok ? r.json() : { lancamentos: [] })
+        fetch(`/api/contas?empresaId=${empresaId}`).then(r => r.ok ? r.json() : []),
+        fetch(`/api/lancamentos?empresaId=${empresaId}`).then(r => r.ok ? r.json() : { lancamentos: [] })
       ]);
-      if (resContas && resContas.length > 0) setContas(resContas);
+      if (resContas) setContas(resContas);
       if (resLanc && resLanc.lancamentos) setLancamentos(resLanc.lancamentos);
     } catch (e) {
       console.error("Erro ao atualizar dados:", e);
     }
-  }, []);
+  }, [empresaId]);
 
   // Get flattened list of all contas
   const contasFlat = useCallback(() => {
@@ -242,13 +283,18 @@ export function ContabilProvider({ children }) {
 
   // Add a new lançamento
   const addLancamento = useCallback(async (lancamento) => {
+    const targetEmpresaId = lancamento.empresaId || empresaId;
+    if (!targetEmpresaId) {
+      alert("Por favor, selecione uma empresa antes de cadastrar um lançamento.");
+      return false;
+    }
     try {
       const res = await fetch('/api/lancamentos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...lancamento,
-          empresaId: 1
+          empresaId: parseInt(targetEmpresaId)
         })
       });
       if (res.ok) {
@@ -264,7 +310,7 @@ export function ContabilProvider({ children }) {
       alert("Erro ao conectar à API");
       return false;
     }
-  }, [refreshData]);
+  }, [empresaId, refreshData]);
 
   // Delete a lançamento
   const deleteLancamento = useCallback((id) => {
@@ -443,6 +489,11 @@ export function ContabilProvider({ children }) {
   }, [contasFlat, lancamentos]);
 
   const value = {
+    empresaId,
+    setEmpresaId,
+    empresas,
+    loadEmpresas,
+    refreshData,
     contas,
     setContas,
     lancamentos,

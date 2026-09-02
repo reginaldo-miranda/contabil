@@ -1,37 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useContabil } from '../context/ContabilContext';
 import styles from './SeletorEmpresa.module.css';
 
 export default function SeletorEmpresa({ onEmpresaChange }) {
-  const [empresas, setEmpresas] = useState([]);
-  const [selectedId, setSelectedId] = useState('');
+  const { empresaId, setEmpresaId, empresas, loadEmpresas } = useContabil();
   const [showForm, setShowForm] = useState(false);
   const [novaEmpresa, setNovaEmpresa] = useState({ nome: '', cnpj: '' });
 
-  const loadEmpresas = async () => {
-    try {
-      const res = await fetch('/api/empresas');
-      if (res.ok) {
-        const data = await res.json();
-        setEmpresas(data);
-        if (data.length > 0 && !selectedId) {
-          setSelectedId(data[0].id.toString());
-          if (onEmpresaChange) onEmpresaChange(data[0].id.toString());
-        }
-      }
-    } catch (e) {
-      console.error("Erro ao buscar empresas:", e);
-    }
-  };
-
-  useEffect(() => {
-    loadEmpresas();
-  }, []);
-
   const handleChange = (e) => {
     const id = e.target.value;
-    setSelectedId(id);
+    setEmpresaId(id);
     if (onEmpresaChange) onEmpresaChange(id);
   };
 
@@ -47,9 +27,10 @@ export default function SeletorEmpresa({ onEmpresaChange }) {
       });
       if (res.ok) {
         const nova = await res.json();
-        await loadEmpresas();
-        setSelectedId(nova.id.toString());
-        if (onEmpresaChange) onEmpresaChange(nova.id.toString());
+        if (loadEmpresas) await loadEmpresas();
+        const newId = nova.id.toString();
+        setEmpresaId(newId);
+        if (onEmpresaChange) onEmpresaChange(newId);
         setShowForm(false);
         setNovaEmpresa({ nome: '', cnpj: '' });
       } else {
@@ -66,7 +47,7 @@ export default function SeletorEmpresa({ onEmpresaChange }) {
       <div className={styles.selectorWrapper}>
         <select 
           className={styles.select} 
-          value={selectedId} 
+          value={empresaId || ''} 
           onChange={handleChange}
         >
           {empresas.length === 0 && <option value="">Nenhuma empresa</option>}
