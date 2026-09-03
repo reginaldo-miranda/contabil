@@ -8,15 +8,46 @@ datasource db {
 }
 
 model Empresa {
-  id        Int      @id @default(autoincrement())
-  nome      String   @db.VarChar(200)
-  cnpj      String?  @unique @db.VarChar(18)
-  ativa     Boolean  @default(true)
-  criadoEm  DateTime @default(now()) @map("criado_em")
-  contas    Conta[]
+  id          Int              @id @default(autoincrement())
+  nome        String           @db.VarChar(200)
+  cnpj        String?          @unique @db.VarChar(18)
+  ativa       Boolean          @default(true)
+  criadoEm    DateTime         @default(now()) @map("criado_em")
+  contas      Conta[]
   lancamentos Lancamento[]
+  usuarios    UsuarioEmpresa[]
 
   @@map("empresas")
+}
+
+model Usuario {
+  id           Int              @id @default(autoincrement())
+  nome         String           @db.VarChar(150)
+  email        String           @unique @db.VarChar(191)
+  senha        String           @db.VarChar(255)
+  ativo        Boolean          @default(true)
+  criadoEm     DateTime         @default(now()) @map("criado_em")
+  atualizadoEm DateTime         @updatedAt @map("atualizado_em")
+  empresas     UsuarioEmpresa[]
+
+  @@map("usuarios")
+}
+
+model UsuarioEmpresa {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  empresaId  Int      @map("empresa_id")
+  papel      String   @default("ADMIN") @db.VarChar(20)
+  permissoes Json?
+  criadoEm   DateTime @default(now()) @map("criado_em")
+
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  empresa    Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, empresaId])
+  @@index([empresaId])
+  @@index([usuarioId])
+  @@map("usuario_empresas")
 }
 
 model Conta {

@@ -183,11 +183,37 @@ function flattenContas(contas) {
 // PROVIDER
 // ==========================================
 export function ContabilProvider({ children }) {
+  const [usuario, setUsuario] = useState(null);
   const [empresas, setEmpresas] = useState([]);
   const [empresaId, setEmpresaIdState] = useState(null);
   const [contas, setContas] = useState(PLANO_CONTAS_MOCK);
   const [lancamentos, setLancamentos] = useState([]);
   const [loaded, setLoaded] = useState(false);
+
+  // Carregar dados da sessão do usuário autenticado
+  const carregarSessao = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        setUsuario(data.usuario);
+        if (data.empresas && data.empresas.length > 0) {
+          setEmpresas(data.empresas);
+          const savedId = typeof window !== 'undefined' ? localStorage.getItem('contabil_empresa_id') : null;
+          const exists = data.empresas.some(e => e.id.toString() === savedId);
+          const initialId = exists ? savedId : data.empresas[0].id.toString();
+          setEmpresaIdState(initialId);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('contabil_empresa_id', initialId);
+          }
+        }
+      } else {
+        setUsuario(null);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar sessão:", e);
+    }
+  }, []);
 
   // Carregar lista de empresas e restaurar a seleção salva
   const loadEmpresas = useCallback(async () => {
@@ -204,6 +230,8 @@ export function ContabilProvider({ children }) {
           if (typeof window !== 'undefined') {
             localStorage.setItem('contabil_empresa_id', initialId);
           }
+        } else {
+          setEmpresaIdState(null);
         }
       }
     } catch (e) {
@@ -211,9 +239,36 @@ export function ContabilProvider({ children }) {
     }
   }, []);
 
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.error("Erro ao realizar logout:", e);
+    } finally {
+      setUsuario(null);
+      setEmpresas([]);
+      setEmpresaIdState(null);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('contabil_empresa_id');
+        window.location.href = '/login';
+      }
+    }
+  }, []);
+
+  // Verificar permissão para um determinado módulo na empresa selecionada
+  const temPermissao = useCallback((modulo) => {
+    if (usuario?.email === 'admin@contabil.com') return true;
+    if (!empresaId) return true;
+    const empresaAtual = empresas.find(e => e.id.toString() === empresaId?.toString());
+    if (!empresaAtual) return true;
+    if (empresaAtual.papel === 'ADMIN') return true;
+    if (!empresaAtual.permissoes) return true;
+    return Array.isArray(empresaAtual.permissoes) ? empresaAtual.permissoes.includes(modulo) : true;
+  }, [usuario, empresaId, empresas]);
+
   useEffect(() => {
-    loadEmpresas();
-  }, [loadEmpresas]);
+    carregarSessao();
+  }, [carregarSessao]);
 
   const setEmpresaId = useCallback((id) => {
     const idStr = id ? id.toString() : null;
@@ -489,6 +544,11 @@ export function ContabilProvider({ children }) {
   }, [contasFlat, lancamentos]);
 
   const value = {
+    usuario,
+    setUsuario,
+    logout,
+    carregarSessao,
+    temPermissao,
     empresaId,
     setEmpresaId,
     empresas,

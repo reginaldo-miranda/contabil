@@ -146,9 +146,12 @@ async function seedContas(empresaId) {
   return count;
 }
 
-async function main() {
-  console.log('Iniciando seed do plano de contas CFC...');
+const bcrypt = require('bcryptjs');
 
+async function main() {
+  console.log('Iniciando seed do banco de dados...');
+
+  // Criar ou obter Empresa Demonstração
   const empresa = await prisma.empresa.upsert({
     where: { cnpj: '00.000.000/0001-00' },
     update: {},
@@ -159,9 +162,42 @@ async function main() {
   });
   console.log(`Empresa: ${empresa.nome} (ID: ${empresa.id})`);
 
+  // Criar ou obter Usuário Administrador
+  const senhaHash = await bcrypt.hash('admin123', 10);
+  const usuario = await prisma.usuario.upsert({
+    where: { email: 'admin@contabil.com' },
+    update: { senha: senhaHash },
+    create: {
+      nome: 'Administrador',
+      email: 'admin@contabil.com',
+      senha: senhaHash,
+    },
+  });
+  console.log(`Usuário Admin: ${usuario.email} (ID: ${usuario.id})`);
+
+  // Vincular Usuário Administrador a TODAS as empresas do banco
+  const todasEmpresas = await prisma.empresa.findMany();
+  for (const emp of todasEmpresas) {
+    await prisma.usuarioEmpresa.upsert({
+      where: {
+        usuarioId_empresaId: {
+          usuarioId: usuario.id,
+          empresaId: emp.id,
+        },
+      },
+      update: { papel: 'ADMIN' },
+      create: {
+        usuarioId: usuario.id,
+        empresaId: emp.id,
+        papel: 'ADMIN',
+      },
+    });
+    console.log(`Vínculo criado para empresa: ${emp.nome} (ID: ${emp.id}) -> Admin`);
+  }
+
   const existingContas = await prisma.conta.count({ where: { empresaId: empresa.id } });
   if (existingContas > 0) {
-    console.log(`Empresa já possui ${existingContas} contas. Pulando seed.`);
+    console.log(`Empresa já possui ${existingContas} contas. Pulando seed de contas.`);
     return;
   }
 
