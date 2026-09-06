@@ -6,25 +6,124 @@ import FormConta from './FormConta';
 import SeletorContaComBusca from './SeletorContaComBusca';
 import styles from './FormLancamento.module.css';
 
-export default function FormLancamento({ onSalvar, onFechar }) {
+// Helpers para formato monetário brasileiro (1.234,56)
+function parseBRValue(str) {
+  if (!str && str !== 0) return 0;
+  if (typeof str === 'number') return str;
+  const s = String(str).trim();
+  if (!s) return 0;
+
+  // Se contiver vírgula e ponto: ex "1.234,56" ou "1,234.56"
+  if (s.includes(',') && s.includes('.')) {
+    const lastComma = s.lastIndexOf(',');
+    const lastDot = s.lastIndexOf('.');
+    if (lastComma > lastDot) {
+      // Formato BR: 1.234,56 -> remove pontos, troca vírgula por ponto
+      return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+    } else {
+      // Formato US: 1,234.56 -> remove vírgulas
+      return parseFloat(s.replace(/,/g, '')) || 0;
+    }
+  }
+
+  // Se contiver apenas vírgula: ex "286,46"
+  if (s.includes(',')) {
+    return parseFloat(s.replace(',', '.')) || 0;
+  }
+
+  // Se contiver apenas ponto: ex "286.46"
+  if (s.includes('.')) {
+    const parts = s.split('.');
+    if (parts.length > 2) {
+      // Mais de um ponto (ex: 1.234.567) -> pontos de milhar
+      return parseFloat(s.replace(/\./g, '')) || 0;
+    }
+    // 1 ponto apenas: trata como separador decimal (286.46 -> 286.46)
+    return parseFloat(s) || 0;
+  }
+
+  return parseFloat(s) || 0;
+}
+
+function formatBRValue(str) {
+  if (!str && str !== 0) return '';
+  let s = String(str);
+  // Permite apenas dígitos, vírgula e ponto
+  s = s.replace(/[^\d.,]/g, '');
+  return s;
+}
+
+function formatInitialValue(val) {
+  if (val === undefined || val === null || val === '') return '';
+  const num = typeof val === 'number' ? val : parseBRValue(val);
+  return num ? num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+}
+
+export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEditar = null }) {
   const { empresaId, getContasAnaliticas, refreshData } = useContabil();
   const contas = getContasAnaliticas();
+  const isEditing = Boolean(lancamentoParaEditar);
 
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
-  const [documento, setDocumento] = useState('');
-  const [historico, setHistorico] = useState('');
-  const [debitos, setDebitos] = useState([{ id: 1, contaId: '', valor: '' }]);
-  const [creditos, setCreditos] = useState([{ id: 2, contaId: '', valor: '' }]);
+  const getInitialDate = () => {
+    if (!lancamentoParaEditar?.data) return new Date().toISOString().split('T')[0];
+    const d = lancamentoParaEditar.data;
+    return typeof d === 'string' ? d.substring(0, 10) : new Date(d).toISOString().split('T')[0];
+  };
+
+  const [data, setData] = useState(getInitialDate);
+  const [documento, setDocumento] = useState(lancamentoParaEditar?.documento || '');
+  const [historico, setHistorico] = useState(lancamentoParaEditar?.historico || '');
+
+  const [debitos, setDebitos] = useState(() => {
+    if (!lancamentoParaEditar) return [{ id: 1, contaId: '', valor: '' }];
+    if (lancamentoParaEditar.debitos && lancamentoParaEditar.debitos.length > 0) {
+      return lancamentoParaEditar.debitos.map((d, i) => ({
+        id: i + 1,
+        contaId: String(d.contaId || d.id || ''),
+        valor: formatInitialValue(d.valor)
+      }));
+    }
+    if (lancamentoParaEditar.partidas && lancamentoParaEditar.partidas.some(p => p.tipo === 'D')) {
+      return lancamentoParaEditar.partidas.filter(p => p.tipo === 'D').map((p, i) => ({
+        id: i + 1,
+        contaId: String(p.contaId || ''),
+        valor: formatInitialValue(p.valor)
+      }));
+    }
+    const cId = lancamentoParaEditar.contaDebitoId || lancamentoParaEditar.contaDebito?.id || '';
+    return [{ id: 1, contaId: String(cId), valor: formatInitialValue(lancamentoParaEditar.valor) }];
+  });
+
+  const [creditos, setCreditos] = useState(() => {
+    if (!lancamentoParaEditar) return [{ id: 2, contaId: '', valor: '' }];
+    if (lancamentoParaEditar.creditos && lancamentoParaEditar.creditos.length > 0) {
+      return lancamentoParaEditar.creditos.map((c, i) => ({
+        id: i + 100,
+        contaId: String(c.contaId || c.id || ''),
+        valor: formatInitialValue(c.valor)
+      }));
+    }
+    if (lancamentoParaEditar.partidas && lancamentoParaEditar.partidas.some(p => p.tipo === 'C')) {
+      return lancamentoParaEditar.partidas.filter(p => p.tipo === 'C').map((p, i) => ({
+        id: i + 100,
+        contaId: String(p.contaId || ''),
+        valor: formatInitialValue(p.valor)
+      }));
+    }
+    const cId = lancamentoParaEditar.contaCreditoId || lancamentoParaEditar.contaCredito?.id || '';
+    return [{ id: 2, contaId: String(cId), valor: formatInitialValue(lancamentoParaEditar.valor) }];
+  });
+
   const [showFormConta, setShowFormConta] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Totais
   const totalDebitos = useMemo(() => {
-    return debitos.reduce((sum, d) => sum + (parseFloat(d.valor) || 0), 0);
+    return debitos.reduce((sum, d) => sum + parseBRValue(d.valor), 0);
   }, [debitos]);
 
   const totalCreditos = useMemo(() => {
-    return creditos.reduce((sum, c) => sum + (parseFloat(c.valor) || 0), 0);
+    return creditos.reduce((sum, c) => sum + parseBRValue(c.valor), 0);
   }, [creditos]);
 
   const diferenca = Math.abs(totalDebitos - totalCreditos);
@@ -70,10 +169,10 @@ export default function FormLancamento({ onSalvar, onFechar }) {
     if (!isBalanced) return false;
 
     for (let d of debitos) {
-      if (!d.contaId || !(parseFloat(d.valor) > 0)) return false;
+      if (!d.contaId || !(parseBRValue(d.valor) > 0)) return false;
     }
     for (let c of creditos) {
-      if (!c.contaId || !(parseFloat(c.valor) > 0)) return false;
+      if (!c.contaId || !(parseBRValue(c.valor) > 0)) return false;
     }
     return true;
   };
@@ -86,15 +185,16 @@ export default function FormLancamento({ onSalvar, onFechar }) {
 
     // Para compatibilidade com a API MySQL existente (salva a partida principal e lança os dados)
     const success = await onSalvar({
+      id: lancamentoParaEditar?.id,
       data,
       documento,
       historico,
       empresaId: parseInt(empresaId),
       contaDebitoId: parseInt(debitos[0].contaId),
       contaCreditoId: parseInt(creditos[0].contaId),
-      valor: totalDebitos,
-      debitos: debitos.map(d => ({ contaId: parseInt(d.contaId), valor: parseFloat(d.valor) })),
-      creditos: creditos.map(c => ({ contaId: parseInt(c.contaId), valor: parseFloat(c.valor) }))
+      valor: parseFloat(totalDebitos.toFixed(2)),
+      debitos: debitos.map(d => ({ contaId: parseInt(d.contaId), valor: parseBRValue(d.valor) })),
+      creditos: creditos.map(c => ({ contaId: parseInt(c.contaId), valor: parseBRValue(c.valor) }))
     });
 
     setLoading(false);
@@ -128,7 +228,9 @@ export default function FormLancamento({ onSalvar, onFechar }) {
     <div className={styles.overlay}>
       <div className={styles.modal} style={{ maxWidth: '750px' }}>
         <div className={styles.header} style={{ padding: '10px 16px' }}>
-          <h2 className={styles.title} style={{ fontSize: '1rem' }}>Lançamento por Partida Dobrada</h2>
+          <h2 className={styles.title} style={{ fontSize: '1rem' }}>
+            {isEditing ? '✏️ Editar Lançamento Contábil' : 'Lançamento por Partida Dobrada'}
+          </h2>
           <button type="button" className={styles.closeButton} onClick={onFechar}>&times;</button>
         </div>
 
@@ -175,9 +277,23 @@ export default function FormLancamento({ onSalvar, onFechar }) {
             <button 
               type="button" 
               onClick={() => setShowFormConta(true)}
-              style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}
+              style={{ 
+                background: 'linear-gradient(135deg, var(--accent), #6366f1)', 
+                border: 'none', 
+                color: '#fff', 
+                padding: '6px 14px', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '600',
+                boxShadow: '0 2px 8px rgba(99, 102, 241, 0.35)',
+                transition: 'all 0.2s ease',
+                letterSpacing: '0.02em'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.5)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(99, 102, 241, 0.35)'; }}
             >
-              + Nova Conta Analítica
+              📋 + Nova Conta Analítica
             </button>
           </div>
 
@@ -198,9 +314,9 @@ export default function FormLancamento({ onSalvar, onFechar }) {
                   placeholder="Selecione a conta de débito..."
                 />
                 <input 
-                  type="number" step="0.01" min="0.01" value={item.valor} 
-                  onChange={e => handleDebitoChange(item.id, 'valor', e.target.value)}
-                  className={styles.input} style={{ width: '110px', padding: '4px 8px' }} placeholder="Valor" required
+                  type="text" inputMode="decimal" value={item.valor} 
+                  onChange={e => handleDebitoChange(item.id, 'valor', formatBRValue(e.target.value))}
+                  className={styles.input} style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} placeholder="0,00" required
                 />
                 {debitos.length > 1 && (
                   <button type="button" onClick={() => handleRemoveDebito(item.id)} style={{ background: 'transparent', color: '#fb7185', border: 'none', cursor: 'pointer', fontSize: '14px' }}>&times;</button>
@@ -226,9 +342,9 @@ export default function FormLancamento({ onSalvar, onFechar }) {
                   placeholder="Selecione a conta de crédito..."
                 />
                 <input 
-                  type="number" step="0.01" min="0.01" value={item.valor} 
-                  onChange={e => handleCreditoChange(item.id, 'valor', e.target.value)}
-                  className={styles.input} style={{ width: '110px', padding: '4px 8px' }} placeholder="Valor" required
+                  type="text" inputMode="decimal" value={item.valor} 
+                  onChange={e => handleCreditoChange(item.id, 'valor', formatBRValue(e.target.value))}
+                  className={styles.input} style={{ width: '130px', padding: '4px 8px', textAlign: 'right' }} placeholder="0,00" required
                 />
                 {creditos.length > 1 && (
                   <button type="button" onClick={() => handleRemoveCredito(item.id)} style={{ background: 'transparent', color: '#fb7185', border: 'none', cursor: 'pointer', fontSize: '14px' }}>&times;</button>
@@ -266,7 +382,7 @@ export default function FormLancamento({ onSalvar, onFechar }) {
           <div className={styles.footer} style={{ padding: '6px 0 0 0', background: 'transparent', borderTop: 'none' }}>
             <button type="button" onClick={onFechar} className={styles.btnCancel} style={{ padding: '5px 12px', fontSize: '12px' }}>Cancelar</button>
             <button type="submit" disabled={!isFormValid() || loading} className={styles.btnSave} style={{ padding: '5px 16px', fontSize: '12px' }}>
-              {loading ? 'Salvando...' : 'Salvar Lançamento (MySQL)'}
+              {loading ? 'Salvando...' : (isEditing ? 'Salvar Alterações (MySQL)' : 'Salvar Lançamento (MySQL)')}
             </button>
           </div>
         </form>

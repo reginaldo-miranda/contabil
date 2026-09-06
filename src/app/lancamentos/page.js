@@ -7,8 +7,9 @@ import FormLancamento from '../../components/FormLancamento';
 import styles from './Lancamentos.module.css';
 
 export default function LancamentosPage() {
-  const { lancamentos, addLancamento, deleteLancamento } = useContabil();
+  const { lancamentos, addLancamento, updateLancamento, deleteLancamento } = useContabil();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lancamentoEditando, setLancamentoEditando] = useState(null);
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [expandedId, setExpandedId] = useState(null);
@@ -24,9 +25,34 @@ export default function LancamentosPage() {
   }, [lancamentos, dataInicio, dataFim]);
 
   const handleSalvar = async (lancamentoData) => {
-    const success = await addLancamento(lancamentoData);
+    let success = false;
+    if (lancamentoEditando) {
+      success = await updateLancamento(lancamentoEditando.id, lancamentoData);
+    } else {
+      success = await addLancamento(lancamentoData);
+    }
     if (success) {
       setIsModalOpen(false);
+      setLancamentoEditando(null);
+    }
+    return success;
+  };
+
+  const handleNovoLancamento = () => {
+    setLancamentoEditando(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditar = (e, lanc) => {
+    e.stopPropagation();
+    setLancamentoEditando(lanc);
+    setIsModalOpen(true);
+  };
+
+  const handleExcluir = async (e, id) => {
+    e.stopPropagation();
+    if (window.confirm('Tem certeza que deseja excluir este lançamento contábil?')) {
+      await deleteLancamento(id);
     }
   };
 
@@ -54,7 +80,7 @@ export default function LancamentosPage() {
             <h1 className={styles.title}>Lançamentos Contábeis</h1>
             <p className={styles.subtitle}>Livro Diário com Partida Dobrada (MySQL)</p>
           </div>
-          <button className={styles.btnPrimary} onClick={() => setIsModalOpen(true)}>
+          <button className={styles.btnPrimary} onClick={handleNovoLancamento}>
             + Novo Lançamento
           </button>
         </div>
@@ -110,9 +136,23 @@ export default function LancamentosPage() {
                         <span className={styles.hist}>{lanc.historico}</span>
                       </div>
                       <div className={styles.cardActions}>
-                        <span style={{ fontWeight: 'bold', color: 'var(--accent)', marginRight: '16px' }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--accent)', marginRight: '8px' }}>
                           {formatCurrency(valorExibido)}
                         </span>
+                        <button 
+                          className={styles.btnEdit} 
+                          title="Editar lançamento"
+                          onClick={(e) => handleEditar(e, lanc)}
+                        >
+                          ✏️
+                        </button>
+                        <button 
+                          className={styles.btnDelete} 
+                          title="Excluir lançamento"
+                          onClick={(e) => handleExcluir(e, lanc.id)}
+                        >
+                          🗑️
+                        </button>
                         <span className={styles.expandIcon}>
                           {isExpanded ? '▲' : '▼'}
                         </span>
@@ -168,8 +208,12 @@ export default function LancamentosPage() {
 
       {isModalOpen && (
         <FormLancamento 
+          lancamentoParaEditar={lancamentoEditando}
           onSalvar={handleSalvar} 
-          onFechar={() => setIsModalOpen(false)} 
+          onFechar={() => {
+            setIsModalOpen(false);
+            setLancamentoEditando(null);
+          }} 
         />
       )}
     </div>

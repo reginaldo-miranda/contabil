@@ -286,7 +286,7 @@ export function ContabilProvider({ children }) {
       try {
         const [resContas, resLanc] = await Promise.all([
           fetch(`/api/contas?empresaId=${empresaId}`).then(r => r.ok ? r.json() : []),
-          fetch(`/api/lancamentos?empresaId=${empresaId}`).then(r => r.ok ? r.json() : { lancamentos: [] })
+          fetch(`/api/lancamentos?empresaId=${empresaId}&limit=0`).then(r => r.ok ? r.json() : { lancamentos: [] })
         ]);
         if (resContas && resContas.length > 0) {
           setContas(resContas);
@@ -312,7 +312,7 @@ export function ContabilProvider({ children }) {
     try {
       const [resContas, resLanc] = await Promise.all([
         fetch(`/api/contas?empresaId=${empresaId}`).then(r => r.ok ? r.json() : []),
-        fetch(`/api/lancamentos?empresaId=${empresaId}`).then(r => r.ok ? r.json() : { lancamentos: [] })
+        fetch(`/api/lancamentos?empresaId=${empresaId}&limit=0`).then(r => r.ok ? r.json() : { lancamentos: [] })
       ]);
       if (resContas) setContas(resContas);
       if (resLanc && resLanc.lancamentos) setLancamentos(resLanc.lancamentos);
@@ -367,10 +367,57 @@ export function ContabilProvider({ children }) {
     }
   }, [empresaId, refreshData]);
 
+  // Update an existing lançamento
+  const updateLancamento = useCallback(async (id, lancamento) => {
+    const targetEmpresaId = lancamento.empresaId || empresaId;
+    if (!targetEmpresaId) {
+      alert("Por favor, selecione uma empresa.");
+      return false;
+    }
+    try {
+      const res = await fetch(`/api/lancamentos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...lancamento,
+          empresaId: parseInt(targetEmpresaId)
+        })
+      });
+      if (res.ok) {
+        await refreshData();
+        return true;
+      } else {
+        const err = await res.json();
+        alert(err.erro || "Erro ao atualizar lançamento");
+        return false;
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao conectar à API");
+      return false;
+    }
+  }, [empresaId, refreshData]);
+
   // Delete a lançamento
-  const deleteLancamento = useCallback((id) => {
-    setLancamentos(prev => prev.filter(l => l.id !== id));
-  }, []);
+  const deleteLancamento = useCallback(async (id) => {
+    try {
+      const res = await fetch(`/api/lancamentos/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        await refreshData();
+        return true;
+      } else {
+        const err = await res.json();
+        alert(err.erro || "Erro ao excluir lançamento");
+        return false;
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Erro ao conectar à API");
+      return false;
+    }
+  }, [refreshData]);
 
   // Get lançamentos for a specific conta (aceita ID ou código prefixo)
   const getLancamentosPorConta = useCallback((contaId, dataInicio, dataFim, codigoPrefix) => {
@@ -560,6 +607,7 @@ export function ContabilProvider({ children }) {
     contasFlat,
     getContasAnaliticas,
     addLancamento,
+    updateLancamento,
     deleteLancamento,
     getLancamentosPorConta,
     getSaldoConta,

@@ -209,11 +209,31 @@
   font-size: 0.75rem;
 }
 
+.btnEdit {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.btnEdit:hover {
+  background: rgba(129, 140, 248, 0.15);
+  color: var(--accent);
+}
+
 .btnDelete {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 1.25rem;
+  font-size: 1rem;
   cursor: pointer;
   width: 28px;
   height: 28px;
@@ -225,7 +245,7 @@
 }
 
 .btnDelete:hover {
-  background: rgba(251, 113, 133, 0.1);
+  background: rgba(251, 113, 133, 0.15);
   color: var(--passivo);
 }
 
