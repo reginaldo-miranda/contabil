@@ -53,26 +53,111 @@
 }
 
 .filterBar {
+  position: relative;
+  z-index: 20;
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
   background: var(--bg-card);
   padding: 16px 24px;
   border-radius: var(--radius);
   border: 1px solid var(--border-glass);
 }
 
-.filterGroup {
+.searchGroup {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 2;
+  min-width: 280px;
 }
 
-.filterGroup label {
+.searchGroup label, .filterGroup label {
   color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-glass);
+  border-radius: 6px;
+  padding: 0 10px;
+  gap: 8px;
+  transition: var(--transition);
+  height: 38px;
+}
+
+.searchBox:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.searchIcon {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.clearSearchBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.clearSearchBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 150px;
+}
+
+.btnClearAll {
+  background: transparent;
+  border: 1px dashed var(--border-glass);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  height: 38px;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btnClearAll:hover {
+  color: #fff;
+  border-color: var(--passivo);
+  background: rgba(251, 113, 133, 0.1);
 }
 
 .input {

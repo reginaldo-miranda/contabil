@@ -82,7 +82,7 @@ export default function SeletorContaComBusca({ contas, value, onChange, placehol
   };
 
   return (
-    <div className={styles.wrapper} ref={containerRef}>
+    <div className={`${styles.wrapper} ${open ? styles.isOpen : ''}`} ref={containerRef}>
       <div 
         className={`${styles.selectDisplay} ${open ? styles.active : ''}`}
         onClick={handleOpen}

@@ -6,23 +6,130 @@ import { useContabil } from '../../context/ContabilContext';
 import FormLancamento from '../../components/FormLancamento';
 import styles from './Lancamentos.module.css';
 
+const normalizeStr = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+};
+
+const cleanAlphanumeric = (str) => {
+  if (!str) return '';
+  return normalizeStr(str).replace(/[^a-z0-9]/g, '');
+};
+
 export default function LancamentosPage() {
   const { lancamentos, addLancamento, updateLancamento, deleteLancamento } = useContabil();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lancamentoEditando, setLancamentoEditando] = useState(null);
+  const [busca, setBusca] = useState('');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [expandedId, setExpandedId] = useState(null);
 
   const filteredLancamentos = useMemo(() => {
+    const rawSearch = normalizeStr(busca).trim();
+    if (!rawSearch) {
+      return (lancamentos || []).filter(lanc => {
+        const dataStr = typeof lanc.data === 'string' ? lanc.data.substring(0, 10) : new Date(lanc.data).toISOString().substring(0, 10);
+        if (dataInicio && dataStr < dataInicio) return false;
+        if (dataFim && dataStr > dataFim) return false;
+        return true;
+      });
+    }
+
+    // 1. Detectar busca explícita por documento (ex: "doc 9", "doc: 9", "doc9", "documento 9", "nº 9", "no 9", "#9")
+    const docPrefixRegex = /^(?:doc|doc:|documento|documento:|n|no|nº|#)\s*([a-z0-9\-_./]+)$/i;
+    const docMatch = rawSearch.match(docPrefixRegex);
+    const targetDocNumber = docMatch ? docMatch[1].trim() : null;
+
+    // 2. Detectar se digitou apenas um número puro (ex: "9" ou "65")
+    const isPureNumber = /^\d+$/.test(rawSearch);
+
+    // 3. Tokens para busca geral de texto
+    const tokens = rawSearch.split(/\s+/).filter(Boolean);
+
     return (lancamentos || []).filter(lanc => {
-      let keep = true;
+      // Filtro por data do cabeçalho
       const dataStr = typeof lanc.data === 'string' ? lanc.data.substring(0, 10) : new Date(lanc.data).toISOString().substring(0, 10);
-      if (dataInicio && dataStr < dataInicio) keep = false;
-      if (dataFim && dataStr > dataFim) keep = false;
-      return keep;
+      if (dataInicio && dataStr < dataInicio) return false;
+      if (dataFim && dataStr > dataFim) return false;
+
+      const docStr = String(lanc.documento || lanc.id || '').trim();
+      const cleanDocStr = cleanAlphanumeric(docStr);
+      const docDigits = docStr.replace(/\D/g, '');
+      const parsedDocNum = docDigits ? parseInt(docDigits, 10) : NaN;
+
+      // CASO A: Usuário digitou prefixo explícito de documento (ex: "doc 9", "nº 65")
+      if (targetDocNumber) {
+        const cleanTarget = cleanAlphanumeric(targetDocNumber);
+        const targetDigits = targetDocNumber.replace(/\D/g, '');
+        const parsedTargetNum = targetDigits ? parseInt(targetDigits, 10) : NaN;
+
+        if (docStr.toLowerCase() === targetDocNumber.toLowerCase()) return true;
+        if (cleanDocStr && cleanDocStr === cleanTarget) return true;
+        if (!isNaN(parsedDocNum) && !isNaN(parsedTargetNum) && parsedDocNum === parsedTargetNum) return true;
+        if (lanc.id && !isNaN(parsedTargetNum) && Number(lanc.id) === parsedTargetNum) return true;
+        if (docStr.toLowerCase().startsWith(targetDocNumber.toLowerCase())) return true;
+        if (docDigits && targetDigits && docDigits.startsWith(targetDigits)) return true;
+        return false;
+      }
+
+      // CASO B: Usuário digitou um número puro (ex: "9" ou "65")
+      if (isPureNumber) {
+        const numVal = parseInt(rawSearch, 10);
+
+        // 1. Bate se o Documento/ID for exatamente esse número ou começar por ele
+        if (docStr === rawSearch) return true;
+        if (lanc.id && Number(lanc.id) === numVal) return true;
+        if (!isNaN(parsedDocNum) && parsedDocNum === numVal) return true;
+        if (docStr.startsWith(rawSearch)) return true;
+        if (docDigits && docDigits.startsWith(rawSearch)) return true;
+
+        // 2. Bate se o histórico contiver esse número como palavra isolada (ex: "NF 9" ou "Lote 9")
+        const histNorm = normalizeStr(lanc.historico);
+        const histWords = histNorm.split(/[^a-z0-9]+/).filter(Boolean);
+        if (histWords.includes(rawSearch)) return true;
+
+        // 3. Bate se o valor for exatamente esse valor ou começar por ele
+        const valNum = parseFloat(lanc.valor) || (lanc.partidas && lanc.partidas[0] ? parseFloat(lanc.partidas[0].valor) : 0);
+        const valStr = String(valNum);
+        if (valStr.startsWith(rawSearch) || valStr === rawSearch) return true;
+
+        // 4. Bate se alguma conta tiver esse código exato
+        if (lanc.contaDebito && (lanc.contaDebito.codigo === rawSearch || cleanAlphanumeric(lanc.contaDebito.codigo) === rawSearch)) return true;
+        if (lanc.contaCredito && (lanc.contaCredito.codigo === rawSearch || cleanAlphanumeric(lanc.contaCredito.codigo) === rawSearch)) return true;
+        if (lanc.partidas && lanc.partidas.some(p => p.contaCodigo === rawSearch || cleanAlphanumeric(p.contaCodigo) === rawSearch)) return true;
+
+        return false;
+      }
+
+      // CASO C: Busca geral por texto / palavras múltiplas
+      const histNorm = normalizeStr(lanc.historico);
+      let contasText = '';
+      if (lanc.contaDebito) contasText += ` ${normalizeStr(lanc.contaDebito.codigo)} ${normalizeStr(lanc.contaDebito.nome)}`;
+      if (lanc.contaCredito) contasText += ` ${normalizeStr(lanc.contaCredito.codigo)} ${normalizeStr(lanc.contaCredito.nome)}`;
+      if (lanc.partidas) {
+        lanc.partidas.forEach(p => {
+          contasText += ` ${normalizeStr(p.contaCodigo)} ${normalizeStr(p.contaNome)}`;
+        });
+      }
+
+      // Datas formatadas (só incluídas se o usuário digitou uma barra "/" ou hífen "-")
+      let datasText = '';
+      if (rawSearch.includes('/') || rawSearch.includes('-')) {
+        const [y, m, d] = dataStr.split('-');
+        datasText = ` ${d}/${m}/${y} ${d}/${m} ${dataStr}`;
+      }
+
+      const searchableBlob = `${normalizeStr(docStr)} ${histNorm} ${contasText} ${datasText}`;
+
+      return tokens.every(token => {
+        return searchableBlob.includes(token);
+      });
     });
-  }, [lancamentos, dataInicio, dataFim]);
+  }, [lancamentos, dataInicio, dataFim, busca]);
 
   const handleSalvar = async (lancamentoData) => {
     let success = false;
@@ -86,6 +193,29 @@ export default function LancamentosPage() {
         </div>
 
         <div className={styles.filterBar}>
+          <div className={styles.searchGroup}>
+            <label>Buscar Lançamento</label>
+            <div className={styles.searchBox}>
+              <span className={styles.searchIcon}>🔍</span>
+              <input 
+                type="text" 
+                placeholder="Buscar por Nº Doc, histórico, conta, valor..."
+                value={busca} 
+                onChange={e => setBusca(e.target.value)}
+                className={styles.searchInput}
+              />
+              {busca && (
+                <button 
+                  type="button" 
+                  className={styles.clearSearchBtn}
+                  onClick={() => setBusca('')}
+                  title="Limpar texto da busca"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
           <div className={styles.filterGroup}>
             <label>Data Início</label>
             <input 
@@ -104,10 +234,11 @@ export default function LancamentosPage() {
               className={styles.input}
             />
           </div>
-          {(dataInicio || dataFim) && (
+          {(busca || dataInicio || dataFim) && (
             <button 
-              onClick={() => { setDataInicio(''); setDataFim(''); }}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '13px', alignSelf: 'flex-end', paddingBottom: '8px' }}
+              onClick={() => { setBusca(''); setDataInicio(''); setDataFim(''); }}
+              className={styles.btnClearAll}
+              title="Limpar todos os filtros aplicados"
             >
               Limpar Filtros
             </button>

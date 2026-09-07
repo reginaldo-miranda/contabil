@@ -29,6 +29,8 @@
 }
 
 .filterBar {
+  position: relative;
+  z-index: 20;
   display: flex;
   gap: 16px;
   align-items: center;

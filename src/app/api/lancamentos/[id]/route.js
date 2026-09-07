@@ -25,8 +25,22 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const { id } = await params;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      return NextResponse.json({ erro: 'ID de lançamento inválido' }, { status: 400 });
+    }
+
     const body = await request.json();
-    const { data, valor, historico, contaDebitoId, contaCreditoId, empresaId } = body;
+    const { data, documento, valor, historico, debitos, creditos, empresaId } = body;
+    let { contaDebitoId, contaCreditoId } = body;
+
+    // Fallback para pegar dos arrays de debitos/creditos se vierem do formulário
+    if (!contaDebitoId && Array.isArray(debitos) && debitos.length > 0) {
+      contaDebitoId = debitos[0].contaId;
+    }
+    if (!contaCreditoId && Array.isArray(creditos) && creditos.length > 0) {
+      contaCreditoId = creditos[0].contaId;
+    }
 
     if (!data || !valor || !historico || !contaDebitoId || !contaCreditoId || !empresaId) {
       return NextResponse.json({ erro: 'Todos os campos são obrigatórios' }, { status: 400 });
@@ -40,6 +54,7 @@ export async function PUT(request, { params }) {
     const parsedDebitoId = parseInt(contaDebitoId);
     const parsedCreditoId = parseInt(contaCreditoId);
     const parsedEmpresaId = parseInt(empresaId);
+    const docLimpo = documento ? String(documento).trim() : null;
 
     if (parsedDebitoId === parsedCreditoId) {
       return NextResponse.json({ erro: 'A conta de débito e a conta de crédito não podem ser iguais' }, { status: 400 });
@@ -69,7 +84,7 @@ export async function PUT(request, { params }) {
     }
 
     const lancamento = await prisma.lancamento.update({
-      where: { id: parseInt(id) },
+      where: { id: parsedId },
       data: {
         data: new Date(data),
         valor: parsedVal,
@@ -86,7 +101,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(lancamento);
   } catch (error) {
     console.error('Erro ao atualizar lançamento:', error);
-    return NextResponse.json({ erro: 'Erro ao atualizar lançamento contábil' }, { status: 500 });
+    return NextResponse.json({ erro: error.message || 'Erro ao atualizar lançamento contábil' }, { status: 500 });
   }
 }
 
