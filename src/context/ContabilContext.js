@@ -436,8 +436,9 @@ export function ContabilProvider({ children }) {
         temConta = temConta || l.partidas.some(p => match(p.contaId, p.contaCodigo));
       }
       if (!temConta) return false;
-      if (dataInicio && l.data < dataInicio) return false;
-      if (dataFim && l.data > dataFim) return false;
+      const dataLanc = typeof l.data === 'string' ? l.data.substring(0, 10) : new Date(l.data).toISOString().substring(0, 10);
+      if (dataInicio && dataLanc < dataInicio) return false;
+      if (dataFim && dataLanc > dataFim) return false;
       return true;
     });
   }, [lancamentos]);
@@ -448,7 +449,8 @@ export function ContabilProvider({ children }) {
     let creditos = 0;
 
     (lancamentos || []).forEach(l => {
-      if (dataFim && l.data > dataFim) return;
+      const dataLanc = typeof l.data === 'string' ? l.data.substring(0, 10) : new Date(l.data).toISOString().substring(0, 10);
+      if (dataFim && dataLanc > dataFim) return;
       if (l.contaDebitoId === contaId || l.contaDebito?.id === contaId) {
         debitos += parseFloat(l.valor) || 0;
       }
@@ -497,8 +499,9 @@ export function ContabilProvider({ children }) {
       const { debitos, creditos } = getSaldoConta(conta.id, dataFim);
       let dPeriodo = 0, cPeriodo = 0;
       (lancamentos || []).forEach(l => {
-        if (dataInicio && l.data < dataInicio) return;
-        if (dataFim && l.data > dataFim) return;
+        const dataLanc = typeof l.data === 'string' ? l.data.substring(0, 10) : new Date(l.data).toISOString().substring(0, 10);
+        if (dataInicio && dataLanc < dataInicio) return;
+        if (dataFim && dataLanc > dataFim) return;
         if (l.contaDebitoId === conta.id || l.contaDebito?.id === conta.id) {
           dPeriodo += parseFloat(l.valor) || 0;
         }
