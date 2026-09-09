@@ -6,8 +6,9 @@ echo ========================================================
 echo Iniciando ContabilPro em Segundo Plano (PM2)...
 echo ========================================================
 
-:: Inicia o processo em segundo plano usando PM2
-call npx pm2 start npm --name "contabil" -- run dev
+:: Inicia o processo em segundo plano usando PM2 diretamente com o Next.js
+call npx pm2 start node_modules\next\dist\bin\next --name "contabil" -- dev
+
 
 echo.
 echo Abrindo navegador...
