@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useContabil } from '@/context/ContabilContext';
@@ -9,6 +10,14 @@ import styles from './Sidebar.module.css';
 export default function Sidebar() {
   const pathname = usePathname();
   const { usuario, logout, temPermissao } = useContabil();
+  const [ambiente, setAmbiente] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/ambiente')
+      .then((res) => res.json())
+      .then((data) => setAmbiente(data))
+      .catch(() => {});
+  }, []);
 
   const todosLinks = [
     { id: 'dashboard', href: '/', label: 'Dashboard', icon: '🏠' },
@@ -38,8 +47,19 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoArea}>
-        <span className={styles.logoIcon}>📊</span>
-        <span className={styles.logoText}>ContábilPro</span>
+        <div className={styles.logoHeader}>
+          <span className={styles.logoIcon}>📊</span>
+          <span className={styles.logoText}>ContábilPro</span>
+        </div>
+        {ambiente && (
+          <div
+            className={`${styles.ambienteBadge} ${ambiente.isCloud ? styles.ambienteNuvem : styles.ambienteLocal}`}
+            title={`Banco ativo: ${ambiente.label}`}
+          >
+            <span className={styles.ambienteDot}></span>
+            <span>{ambiente.isCloud ? '☁️ Nuvem (Aiven)' : '🟢 Banco Local'}</span>
+          </div>
+        )}
       </div>
 
       <div className={styles.empresaWrapper}>
