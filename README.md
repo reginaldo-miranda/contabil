@@ -24,8 +24,17 @@ Extraia ou clone o projeto na pasta desejada e abra o terminal nela.
 
 #### Passo 2.2: Configurar o Arquivo de Variáveis de Ambiente (`.env`)
 1. Na raiz do projeto, crie uma cópia do arquivo `.env.example` e salve-a com o nome de `.env`.
-2. Abra o arquivo `.env` e substitua `SUA_SENHA_AQUI` pela senha real do seu MySQL local.
-   - *Nota*: Se a sua senha do MySQL contiver caracteres especiais como `@`, use URL encoding. Por exemplo, se a senha for `saguides@123`, ela deve ser escrita como `saguides%40123`.
+2. Abra o arquivo `.env` e configure a conexão desejada:
+   - **Banco Local**: substitua `SUA_SENHA_AQUI` pela senha real do seu MySQL local (ex: `mysql://root:senha@localhost:3306/contabil`).
+   - **Banco na Nuvem (Aiven)**: cole a URL fornecida pelo serviço de nuvem (com SSL, ex: `mysql://avnadmin:senha@host:porta/defaultdb?ssl-mode=REQUIRED`).
+   - *Nota*: Se a sua senha contiver caracteres especiais como `@`, use URL encoding (ex: `@` vira `%40`).
+
+#### Passo 2.2.1: Alternância Rápida entre Local e Nuvem (Windows)
+Você pode criar seus próprios arquivos `.bat` para alternar entre os bancos:
+1. Copie `conectar-local.example.bat` para `conectar-local.bat` e configure sua senha local.
+2. Copie `conectar-nuvem.example.bat` para `conectar-nuvem.bat` e configure a URL da nuvem.
+3. Dê dois cliques no `.bat` desejado para alternar o banco instantaneamente (esses arquivos são ignorados pelo Git para proteger suas senhas).
+
 
 #### Passo 2.3: Instalar as Dependências do Node
 No terminal, execute o comando abaixo para instalar as bibliotecas do projeto:
