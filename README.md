@@ -59,18 +59,19 @@ npx prisma db seed
 
 ### 3. Como Iniciar o Sistema
 
-#### Atalho Rápido (Somente Windows)
-Basta dar dois cliques no arquivo **[`iniciar_sistema.bat`](file:///C:/contabil/iniciar_sistema.bat)** na raiz do projeto. Ele vai:
-1. Iniciar o servidor local.
-2. Abrir automaticamente o navegador em [http://localhost:3000](http://localhost:3000).
+#### Opção A: Em Segundo Plano (Sem Janela do CMD Aberta — Recomendado)
+O sistema inicia em background e não fecha se o usuário fechar o terminal:
+- **Windows**: Dê dois cliques em **`iniciar_segundo_plano.bat`**. (Para parar, dê dois cliques em **`parar_sistema.bat`**).
+- **Linux / macOS**: Execute `./iniciar_segundo_plano.sh` no terminal. (Para parar: `./parar_sistema.sh`).
 
-#### Pelo Terminal (Qualquer Sistema Operacional)
-1. Inicie o servidor de desenvolvimento:
-   ```bash
-   npm run dev
-   ```
-2. Abra o seu navegador de internet e acesse:
-   [http://localhost:3000](http://localhost:3000)
+#### Opção B: Em Primeiro Plano (Com Janela do Terminal)
+- **Windows**: Dê dois cliques em `iniciar_sistema.bat`.
+- **Qualquer SO (Terminal)**:
+  ```bash
+  npm run dev
+  ```
+  E abra [http://localhost:3000](http://localhost:3000) no seu navegador.
+
 
 ---
 
