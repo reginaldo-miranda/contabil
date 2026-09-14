@@ -116,6 +116,7 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
 
   const [showFormConta, setShowFormConta] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mensagemSucesso, setMensagemSucesso] = useState('');
 
   // Totais
   const totalDebitos = useMemo(() => {
@@ -165,7 +166,7 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
   };
 
   const isFormValid = () => {
-    if (!data || !documento || !historico) return false;
+    if (!data || !historico) return false;
     if (!isBalanced) return false;
 
     for (let d of debitos) {
@@ -177,29 +178,41 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!isFormValid()) return;
+  const handleSaveAction = async (e, fechar = true) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!isFormValid() || loading) return;
 
     setLoading(true);
+    setMensagemSucesso('');
 
     // Para compatibilidade com a API MySQL existente (salva a partida principal e lança os dados)
     const success = await onSalvar({
       id: lancamentoParaEditar?.id,
       data,
-      documento,
-      historico,
+      documento: documento ? documento.trim() : '',
+      historico: historico.trim(),
       empresaId: parseInt(empresaId),
       contaDebitoId: parseInt(debitos[0].contaId),
       contaCreditoId: parseInt(creditos[0].contaId),
       valor: parseFloat(totalDebitos.toFixed(2)),
       debitos: debitos.map(d => ({ contaId: parseInt(d.contaId), valor: parseBRValue(d.valor) })),
       creditos: creditos.map(c => ({ contaId: parseInt(c.contaId), valor: parseBRValue(c.valor) }))
-    });
+    }, { fechar });
 
     setLoading(false);
     if (success) {
-      onFechar();
+      if (fechar) {
+        onFechar();
+      } else {
+        // Modo Salvar e Novo:
+        // Preserva a data, reseta os outros campos para o próximo lançamento
+        setDocumento('');
+        setHistorico('');
+        setDebitos([{ id: Date.now(), contaId: '', valor: '' }]);
+        setCreditos([{ id: Date.now() + 1, contaId: '', valor: '' }]);
+        setMensagemSucesso('✓ Lançamento gravado com sucesso!');
+        setTimeout(() => setMensagemSucesso(''), 4000);
+      }
     }
   };
 
@@ -234,7 +247,7 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
           <button type="button" className={styles.closeButton} onClick={onFechar}>&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form} style={{ padding: '12px 16px', gap: '8px', overflowY: 'auto', maxHeight: '78vh' }}>
+        <form onSubmit={(e) => handleSaveAction(e, true)} className={styles.form} style={{ padding: '12px 16px', gap: '8px', overflowY: 'auto', maxHeight: '78vh' }}>
           <div className={styles.formGrid} style={{ gap: '10px' }}>
             <div className={styles.formGroup}>
               <label>Data</label>
@@ -247,12 +260,11 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Documento / Ref.</label>
+              <label>Documento / Ref. <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: 'normal' }}>(opcional)</span></label>
               <input 
                 type="text" 
                 value={documento} 
                 onChange={e => setDocumento(e.target.value)} 
-                required 
                 className={styles.input}
                 placeholder="Ex: NF-00123"
               />
@@ -379,11 +391,46 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
             </div>
           </div>
 
-          <div className={styles.footer} style={{ padding: '6px 0 0 0', background: 'transparent', borderTop: 'none' }}>
-            <button type="button" onClick={onFechar} className={styles.btnCancel} style={{ padding: '5px 12px', fontSize: '12px' }}>Cancelar</button>
-            <button type="submit" disabled={!isFormValid() || loading} className={styles.btnSave} style={{ padding: '5px 16px', fontSize: '12px' }}>
-              {loading ? 'Salvando...' : (isEditing ? 'Salvar Alterações (MySQL)' : 'Salvar Lançamento (MySQL)')}
+          <div className={styles.footer} style={{ padding: '8px 0 0 0', background: 'transparent', borderTop: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button type="button" onClick={onFechar} className={styles.btnCancel} style={{ padding: '6px 14px', fontSize: '12px' }}>
+              {isEditing ? 'Cancelar' : 'Fechar'}
             </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {mensagemSucesso && (
+                <span style={{ color: 'var(--ativo)', fontSize: '12px', fontWeight: 'bold' }}>
+                  {mensagemSucesso}
+                </span>
+              )}
+              {!isEditing && (
+                <button 
+                  type="button" 
+                  onClick={(e) => handleSaveAction(e, false)} 
+                  disabled={!isFormValid() || loading} 
+                  style={{ 
+                    padding: '6px 14px', 
+                    fontSize: '12px', 
+                    background: 'rgba(52, 211, 153, 0.12)', 
+                    border: '1px solid var(--ativo)', 
+                    color: 'var(--ativo)', 
+                    borderRadius: '6px', 
+                    cursor: (!isFormValid() || loading) ? 'not-allowed' : 'pointer',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease',
+                    opacity: (!isFormValid() || loading) ? 0.6 : 1
+                  }}
+                >
+                  {loading ? 'Salvando...' : '➕ Salvar e Novo'}
+                </button>
+              )}
+              <button 
+                type="submit" 
+                disabled={!isFormValid() || loading} 
+                className={styles.btnSave} 
+                style={{ padding: '6px 16px', fontSize: '12px' }}
+              >
+                {loading ? 'Salvando...' : (isEditing ? 'Salvar Alterações (MySQL)' : 'Salvar e Fechar (MySQL)')}
+              </button>
+            </div>
           </div>
         </form>
 

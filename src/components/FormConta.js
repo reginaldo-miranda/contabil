@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react';
 import { useContabil } from '../context/ContabilContext';
 import styles from './FormConta.module.css';
 
+const normalizeTipo = (tipo) => {
+  if (!tipo) return 'S';
+  return (tipo === 'A' || tipo === 'Analítica') ? 'A' : 'S';
+};
+
+const normalizeNatureza = (nat) => {
+  if (!nat) return 'D';
+  return (nat === 'C' || nat === 'Credora') ? 'C' : 'D';
+};
+
 export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, onSalvar, onFechar }) {
   const { empresaId: empresaIdContext } = useContabil();
   const empresaId = empresaIdProp || empresaIdContext;
@@ -12,8 +22,8 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
   const [formData, setFormData] = useState({
     codigo: '',
     nome: '',
-    tipo: 'Sintética',
-    natureza: 'Devedora',
+    tipo: 'S',
+    natureza: 'D',
     grupo: 'ATIVO',
     nivel: 1
   });
@@ -23,20 +33,20 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
       setFormData({
         codigo: conta.codigo || '',
         nome: conta.nome || '',
-        tipo: conta.tipo || 'Sintética',
-        natureza: conta.natureza || 'Devedora',
+        tipo: normalizeTipo(conta.tipo),
+        natureza: normalizeNatureza(conta.natureza),
         grupo: conta.grupo || 'ATIVO',
         nivel: conta.nivel || 1
       });
     } else if (contaPai) {
       // Auto-fill defaults for child
       setFormData({
-        codigo: contaPai.codigo + '.',
+        codigo: contaPai.codigo ? `${contaPai.codigo}.` : '',
         nome: '',
-        tipo: 'Analítica',
-        natureza: contaPai.natureza,
-        grupo: contaPai.grupo,
-        nivel: contaPai.nivel + 1
+        tipo: 'A',
+        natureza: normalizeNatureza(contaPai.natureza),
+        grupo: contaPai.grupo || 'ATIVO',
+        nivel: (contaPai.nivel || 1) + 1
       });
     }
   }, [conta, contaPai]);
@@ -47,7 +57,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
     
     // Simulate API call
     const savedData = {
-      id: conta ? conta.id : Math.random().toString(),
+      id: conta ? conta.id : undefined,
       ...formData,
       empresaId
     };
@@ -112,8 +122,8 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
                 value={formData.tipo}
                 onChange={e => setFormData({...formData, tipo: e.target.value})}
               >
-                <option value="Sintética">Sintética</option>
-                <option value="Analítica">Analítica</option>
+                <option value="S">Sintética</option>
+                <option value="A">Analítica</option>
               </select>
             </div>
             
@@ -123,8 +133,8 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
                 value={formData.natureza}
                 onChange={e => setFormData({...formData, natureza: e.target.value})}
               >
-                <option value="Devedora">Devedora</option>
-                <option value="Credora">Credora</option>
+                <option value="D">Devedora</option>
+                <option value="C">Credora</option>
               </select>
             </div>
             

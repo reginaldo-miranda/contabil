@@ -131,14 +131,15 @@ export default function LancamentosPage() {
     });
   }, [lancamentos, dataInicio, dataFim, busca]);
 
-  const handleSalvar = async (lancamentoData) => {
+  const handleSalvar = async (lancamentoData, options = {}) => {
+    const fechar = options.fechar !== false;
     let success = false;
     if (lancamentoEditando) {
       success = await updateLancamento(lancamentoEditando.id, lancamentoData);
     } else {
       success = await addLancamento(lancamentoData);
     }
-    if (success) {
+    if (success && fechar) {
       setIsModalOpen(false);
       setLancamentoEditando(null);
     }
@@ -264,7 +265,7 @@ export default function LancamentosPage() {
                       <div className={styles.cardInfo}>
                         <span className={styles.date}>{formatDate(lanc.data)}</span>
                         <span className={styles.doc}>Doc: {lanc.documento || lanc.id}</span>
-                        <span className={styles.hist}>{lanc.historico}</span>
+                        <span className={styles.hist} title={lanc.historico}>{lanc.historico}</span>
                       </div>
                       <div className={styles.cardActions}>
                         <span style={{ fontWeight: 'bold', color: 'var(--accent)', marginRight: '8px' }}>

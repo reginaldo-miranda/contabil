@@ -78,11 +78,13 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { data, historico, empresaId, debitos, creditos, contaDebitoId, contaCreditoId, valor } = body;
+    const { data, documento, historico, empresaId, debitos, creditos, contaDebitoId, contaCreditoId, valor } = body;
 
     if (!data || !historico || !empresaId) {
       return NextResponse.json({ erro: 'Data, histórico e empresa são obrigatórios' }, { status: 400 });
     }
+
+    const docLimpo = documento ? String(documento).trim() : null;
 
     const parsedEmpresaId = parseInt(empresaId);
 
@@ -194,6 +196,7 @@ export async function POST(request) {
         prisma.lancamento.create({
           data: {
             data: new Date(data),
+            documento: docLimpo,
             valor: pair.valor,
             historico: historico.trim(),
             contaDebitoId: pair.contaDebitoId,

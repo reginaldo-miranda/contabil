@@ -64,15 +64,27 @@ export default function PlanoContas() {
     }
   };
 
+  const findParentAccount = (id, tree) => {
+    if (!id || !tree) return null;
+    for (const node of tree) {
+      if (node.id === id) return node;
+      const filhas = node.contasFilhas || node.filhas || [];
+      const found = findParentAccount(id, filhas);
+      if (found) return found;
+    }
+    return null;
+  };
+
   const handleNovaConta = () => {
     setEditingConta(null);
     setContaPai(null);
     setShowForm(true);
   };
 
-  const handleEditar = (conta) => {
+  const handleEditar = (conta, pai = null) => {
+    const parent = pai || (conta?.contaPaiId ? findParentAccount(conta.contaPaiId, contas) : null);
     setEditingConta(conta);
-    setContaPai(null);
+    setContaPai(parent);
     setShowForm(true);
   };
 
@@ -108,9 +120,9 @@ export default function PlanoContas() {
       const body = {
         ...dados,
         empresaId: parseInt(empresaId),
-        contaPaiId: contaPai ? contaPai.id : dados.contaPaiId,
-        tipo: dados.tipo === 'Sintética' ? 'S' : (dados.tipo === 'Analítica' ? 'A' : dados.tipo),
-        natureza: dados.natureza === 'Devedora' ? 'D' : (dados.natureza === 'Credora' ? 'C' : dados.natureza)
+        contaPaiId: contaPai ? contaPai.id : (isEdit ? editingConta.contaPaiId : dados.contaPaiId),
+        tipo: dados.tipo === 'Sintética' || dados.tipo === 'S' ? 'S' : 'A',
+        natureza: dados.natureza === 'Credora' || dados.natureza === 'C' ? 'C' : 'D'
       };
 
       const res = await fetch(url, {

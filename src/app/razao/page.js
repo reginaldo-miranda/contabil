@@ -35,16 +35,20 @@ export default function Razao() {
     let lancamentos = getLancamentosPorConta(contaData.id, dataInicio, dataFim, contaData.codigo) || [];
     lancamentos = [...lancamentos].sort((a, b) => new Date(a.data) - new Date(b.data));
 
-    let saldoAnteriorInfo = null;
+    let saldoAnteriorValor = 0;
     let saldoAcumulado = 0;
+
+    const isDevedora = contaData.natureza === 'D' || contaData.natureza === 'Devedora';
 
     if (dataInicio) {
       const msDiaAnterior = new Date(dataInicio).getTime() - 86400000;
       const dataAnterior = new Date(msDiaAnterior).toISOString().split('T')[0];
       saldoAnteriorInfo = getSaldoConta(contaData.id, dataAnterior);
       
-      const valSaldoAnt = saldoAnteriorInfo?.saldo || 0;
-      saldoAcumulado = valSaldoAnt;
+      const debAnt = saldoAnteriorInfo?.debitos || 0;
+      const credAnt = saldoAnteriorInfo?.creditos || 0;
+      saldoAnteriorValor = isDevedora ? (debAnt - credAnt) : (credAnt - debAnt);
+      saldoAcumulado = saldoAnteriorValor;
     }
 
     // Identifica todos os IDs de contas que pertencem a este grupo/sintética (ex: código "4" pega "4", "4.1", "4.2.2.09.001")
@@ -106,11 +110,17 @@ export default function Razao() {
     });
 
     return {
-      saldoAnterior: saldoAnteriorInfo ? saldoAnteriorInfo.saldo : 0,
+      saldoAnterior: saldoAnteriorValor,
       transactions,
       saldoFinal: saldoAcumulado
     };
   }, [contaData, dataInicio, dataFim, getLancamentosPorConta, getSaldoConta]);
+
+  const getIndicadorSaldo = (valor, natureza) => {
+    if (valor === 0) return '';
+    const isDevedora = natureza === 'D' || natureza === 'Devedora';
+    return isDevedora ? (valor >= 0 ? 'D' : 'C') : (valor >= 0 ? 'C' : 'D');
+  };
 
   const getGrupoColorClass = (grupo) => {
     switch (grupo?.toUpperCase()) {
@@ -199,7 +209,7 @@ export default function Razao() {
                     <tr className={styles.saldoAnteriorRow}>
                       <td colSpan="5"><strong>SALDO ANTERIOR</strong></td>
                       <td className={`${styles.numberCol} ${getSaldoColorClass(razaoData.saldoAnterior)}`}>
-                        <strong>{formatCurrency(Math.abs(razaoData.saldoAnterior))} {razaoData.saldoAnterior >= 0 ? 'D' : 'C'}</strong>
+                        <strong>{formatCurrency(Math.abs(razaoData.saldoAnterior))} {getIndicadorSaldo(razaoData.saldoAnterior, contaData.natureza)}</strong>
                       </td>
                     </tr>
                   )}
@@ -217,7 +227,7 @@ export default function Razao() {
                         <td className={styles.numberCol}>{tx.debito > 0 ? formatCurrency(tx.debito) : ''}</td>
                         <td className={styles.numberCol}>{tx.credito > 0 ? formatCurrency(tx.credito) : ''}</td>
                         <td className={`${styles.numberCol} ${getSaldoColorClass(tx.saldo)}`}>
-                          {formatCurrency(Math.abs(tx.saldo))} {tx.saldo >= 0 ? 'D' : 'C'}
+                          {formatCurrency(Math.abs(tx.saldo))} {getIndicadorSaldo(tx.saldo, contaData.natureza)}
                         </td>
                       </tr>
                     ))
@@ -226,7 +236,7 @@ export default function Razao() {
                   <tr className={styles.saldoFinalRow}>
                     <td colSpan="5"><strong>SALDO FINAL</strong></td>
                     <td className={`${styles.numberCol} ${getSaldoColorClass(razaoData.saldoFinal)}`}>
-                      <strong>{formatCurrency(Math.abs(razaoData.saldoFinal))} {razaoData.saldoFinal >= 0 ? 'D' : 'C'}</strong>
+                      <strong>{formatCurrency(Math.abs(razaoData.saldoFinal))} {getIndicadorSaldo(razaoData.saldoFinal, contaData.natureza)}</strong>
                     </td>
                   </tr>
                 </tbody>

@@ -80,6 +80,7 @@ model Conta {
 model Lancamento {
   id              Int      @id @default(autoincrement())
   data            DateTime @db.Date
+  documento       String?  @db.VarChar(100)
   valor           Decimal  @db.Decimal(15, 2)
   historico       String   @db.Text
   contaDebitoId   Int      @map("conta_debito_id")

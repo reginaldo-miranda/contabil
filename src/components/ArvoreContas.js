@@ -30,7 +30,8 @@ const ContaNode = ({
   onExcluir, 
   onAdicionarFilha,
   isLast,
-  firstMatchId
+  firstMatchId,
+  parentConta = null
 }) => {
   const [expanded, setExpanded] = useState(level <= 2);
   const nodeRowRef = useRef(null);
@@ -68,6 +69,8 @@ const ContaNode = ({
 
   const shouldExpand = (busca && busca.trim() !== '') ? true : expanded;
 
+  const isDevedora = conta.natureza === 'D' || conta.natureza === 'Devedora';
+
   return (
     <div className={styles.nodeContainer}>
       <div 
@@ -99,8 +102,8 @@ const ContaNode = ({
         </span>
         
         {conta.natureza && (
-          <span className={`${styles.naturezaBadge} ${conta.natureza === 'Devedora' ? styles.badgeD : styles.badgeC}`}>
-            {conta.natureza === 'Devedora' ? 'D' : 'C'}
+          <span className={`${styles.naturezaBadge} ${isDevedora ? styles.badgeD : styles.badgeC}`}>
+            {isDevedora ? 'D' : 'C'}
           </span>
         )}
         
@@ -108,7 +111,7 @@ const ContaNode = ({
           {isSintetica && (
             <button onClick={() => onAdicionarFilha(conta)} title="Adicionar Filha" className={styles.actionBtn}>➕</button>
           )}
-          <button onClick={() => onEditar(conta)} title="Editar" className={styles.actionBtn}>✏️</button>
+          <button onClick={() => onEditar(conta, parentConta)} title="Editar" className={styles.actionBtn}>✏️</button>
           <button onClick={() => onExcluir(conta)} title="Excluir" className={`${styles.actionBtn} ${styles.deleteBtn}`}>🗑️</button>
         </div>
       </div>
@@ -126,6 +129,7 @@ const ContaNode = ({
               onAdicionarFilha={onAdicionarFilha}
               isLast={index === filhas.length - 1}
               firstMatchId={firstMatchId}
+              parentConta={conta}
             />
           ))}
         </div>

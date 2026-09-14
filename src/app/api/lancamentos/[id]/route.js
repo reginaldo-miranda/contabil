@@ -87,6 +87,7 @@ export async function PUT(request, { params }) {
       where: { id: parsedId },
       data: {
         data: new Date(data),
+        documento: docLimpo,
         valor: parsedVal,
         historico: historico.trim(),
         contaDebitoId: parsedDebitoId,

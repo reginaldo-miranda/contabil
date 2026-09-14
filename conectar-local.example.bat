@@ -7,7 +7,7 @@ echo # ContabilPro - Variaveis de Ambiente >> .env
 echo # AMBIENTE ATUAL: LOCAL (localhost) >> .env
 echo # ========================================== >> .env
 echo. >> .env
-echo DATABASE_URL="mysql://root:SUA_SENHA_LOCAL@localhost:3306/contabil" >> .env
+echo DATABASE_URL="mysql://root:SUA_SENHA_LOCAL@localhost:3306/contabilidade_db" >> .env
 
 echo.
 echo ========================================================
