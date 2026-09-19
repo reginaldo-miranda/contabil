@@ -444,22 +444,31 @@ export function ContabilProvider({ children }) {
   }, [lancamentos]);
 
   // Get saldo of a specific conta
-  const getSaldoConta = useCallback((contaId, dataFim) => {
+  const getSaldoConta = useCallback((contaId, dataFim, codigoPrefix) => {
     let debitos = 0;
     let creditos = 0;
+
+    const matchConta = (id, obj, codigo) => {
+      if (contaId != null && (id == contaId || obj?.id == contaId || String(id) === String(contaId) || String(obj?.id) === String(contaId))) return true;
+      if (codigoPrefix) {
+        const code = codigo || obj?.codigo;
+        if (code && String(code).startsWith(String(codigoPrefix))) return true;
+      }
+      return false;
+    };
 
     (lancamentos || []).forEach(l => {
       const dataLanc = typeof l.data === 'string' ? l.data.substring(0, 10) : new Date(l.data).toISOString().substring(0, 10);
       if (dataFim && dataLanc > dataFim) return;
-      if (l.contaDebitoId === contaId || l.contaDebito?.id === contaId) {
+      if (matchConta(l.contaDebitoId, l.contaDebito)) {
         debitos += parseFloat(l.valor) || 0;
       }
-      if (l.contaCreditoId === contaId || l.contaCredito?.id === contaId) {
+      if (matchConta(l.contaCreditoId, l.contaCredito)) {
         creditos += parseFloat(l.valor) || 0;
       }
       if (l.partidas) {
         l.partidas.forEach(p => {
-          if (p.contaId === contaId) {
+          if (matchConta(p.contaId, p, p.contaCodigo)) {
             if (p.tipo === 'D') debitos += parseFloat(p.valor) || 0;
             else creditos += parseFloat(p.valor) || 0;
           }
