@@ -15,6 +15,7 @@ model Empresa {
   criadoEm    DateTime         @default(now()) @map("criado_em")
   contas      Conta[]
   lancamentos Lancamento[]
+  lancamentosPadrao LancamentoPadrao[]
   usuarios    UsuarioEmpresa[]
 
   @@map("empresas")
@@ -70,6 +71,8 @@ model Conta {
 
   lancamentosDebito  Lancamento[] @relation("LancamentosDebito")
   lancamentosCredito Lancamento[] @relation("LancamentosCredito")
+  padroesDebito      LancamentoPadrao[] @relation("PadraoDebito")
+  padroesCredito     LancamentoPadrao[] @relation("PadraoCredito")
 
   @@unique([codigo, empresaId])
   @@index([empresaId])
@@ -98,4 +101,25 @@ model Lancamento {
   @@index([contaCreditoId])
   @@map("lancamentos")
 }
+
+model LancamentoPadrao {
+  id              Int      @id @default(autoincrement())
+  descricao       String   @db.VarChar(150)
+  historico       String   @db.Text
+  contaDebitoId   Int      @map("conta_debito_id")
+  contaCreditoId  Int      @map("conta_credito_id")
+  empresaId       Int      @map("empresa_id")
+  criadoEm        DateTime @default(now()) @map("criado_em")
+  atualizadoEm    DateTime @updatedAt @map("atualizado_em")
+
+  contaDebito     Conta    @relation("PadraoDebito", fields: [contaDebitoId], references: [id])
+  contaCredito    Conta    @relation("PadraoCredito", fields: [contaCreditoId], references: [id])
+  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([contaDebitoId])
+  @@index([contaCreditoId])
+  @@map("lancamentos_padrao")
+}
+
 

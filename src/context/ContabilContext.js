@@ -188,6 +188,7 @@ export function ContabilProvider({ children }) {
   const [empresaId, setEmpresaIdState] = useState(null);
   const [contas, setContas] = useState(PLANO_CONTAS_MOCK);
   const [lancamentos, setLancamentos] = useState([]);
+  const [modelosLancamento, setModelosLancamento] = useState([]);
   const [loaded, setLoaded] = useState(false);
 
   // Carregar dados da sessão do usuário autenticado
@@ -284,9 +285,10 @@ export function ContabilProvider({ children }) {
 
     async function loadData() {
       try {
-        const [resContas, resLanc] = await Promise.all([
+        const [resContas, resLanc, resModelos] = await Promise.all([
           fetch(`/api/contas?empresaId=${empresaId}`).then(r => r.ok ? r.json() : []),
-          fetch(`/api/lancamentos?empresaId=${empresaId}&limit=0`).then(r => r.ok ? r.json() : { lancamentos: [] })
+          fetch(`/api/lancamentos?empresaId=${empresaId}&limit=0`).then(r => r.ok ? r.json() : { lancamentos: [] }),
+          fetch(`/api/lancamentos-padrao?empresaId=${empresaId}`).then(r => r.ok ? r.json() : [])
         ]);
         if (resContas && resContas.length > 0) {
           setContas(resContas);
@@ -297,6 +299,11 @@ export function ContabilProvider({ children }) {
           setLancamentos(resLanc.lancamentos);
         } else {
           setLancamentos([]);
+        }
+        if (Array.isArray(resModelos)) {
+          setModelosLancamento(resModelos);
+        } else {
+          setModelosLancamento([]);
         }
       } catch (e) {
         console.error("Erro ao carregar dados do banco:", e);
@@ -310,12 +317,14 @@ export function ContabilProvider({ children }) {
   const refreshData = useCallback(async () => {
     if (!empresaId) return;
     try {
-      const [resContas, resLanc] = await Promise.all([
+      const [resContas, resLanc, resModelos] = await Promise.all([
         fetch(`/api/contas?empresaId=${empresaId}`).then(r => r.ok ? r.json() : []),
-        fetch(`/api/lancamentos?empresaId=${empresaId}&limit=0`).then(r => r.ok ? r.json() : { lancamentos: [] })
+        fetch(`/api/lancamentos?empresaId=${empresaId}&limit=0`).then(r => r.ok ? r.json() : { lancamentos: [] }),
+        fetch(`/api/lancamentos-padrao?empresaId=${empresaId}`).then(r => r.ok ? r.json() : [])
       ]);
       if (resContas) setContas(resContas);
       if (resLanc && resLanc.lancamentos) setLancamentos(resLanc.lancamentos);
+      if (Array.isArray(resModelos)) setModelosLancamento(resModelos);
     } catch (e) {
       console.error("Erro ao atualizar dados:", e);
     }
@@ -602,6 +611,55 @@ export function ContabilProvider({ children }) {
     };
   }, [contasFlat, lancamentos]);
 
+  const addModeloLancamento = useCallback(async (modelo) => {
+    try {
+      const res = await fetch('/api/lancamentos-padrao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...modelo, empresaId: parseInt(empresaId) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erro || 'Erro ao criar modelo');
+      setModelosLancamento(prev => [...prev, data]);
+      return data;
+    } catch (e) {
+      console.error('Erro ao adicionar modelo:', e);
+      throw e;
+    }
+  }, [empresaId]);
+
+  const updateModeloLancamento = useCallback(async (modelo) => {
+    try {
+      const res = await fetch('/api/lancamentos-padrao', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(modelo),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erro || 'Erro ao atualizar modelo');
+      setModelosLancamento(prev => prev.map(m => m.id === data.id ? data : m));
+      return data;
+    } catch (e) {
+      console.error('Erro ao atualizar modelo:', e);
+      throw e;
+    }
+  }, []);
+
+  const deleteModeloLancamento = useCallback(async (id) => {
+    try {
+      const res = await fetch(`/api/lancamentos-padrao?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.erro || 'Erro ao excluir modelo');
+      setModelosLancamento(prev => prev.filter(m => m.id !== id));
+      return data;
+    } catch (e) {
+      console.error('Erro ao excluir modelo:', e);
+      throw e;
+    }
+  }, []);
+
   const value = {
     usuario,
     setUsuario,
@@ -616,6 +674,10 @@ export function ContabilProvider({ children }) {
     contas,
     setContas,
     lancamentos,
+    modelosLancamento,
+    addModeloLancamento,
+    updateModeloLancamento,
+    deleteModeloLancamento,
     contasFlat,
     getContasAnaliticas,
     addLancamento,

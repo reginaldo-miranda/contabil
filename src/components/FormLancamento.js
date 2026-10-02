@@ -60,7 +60,7 @@ function formatInitialValue(val) {
 }
 
 export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEditar = null }) {
-  const { empresaId, getContasAnaliticas, refreshData } = useContabil();
+  const { empresaId, getContasAnaliticas, refreshData, modelosLancamento } = useContabil();
   const contas = getContasAnaliticas();
   const isEditing = Boolean(lancamentoParaEditar);
 
@@ -73,6 +73,7 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
   const [data, setData] = useState(getInitialDate);
   const [documento, setDocumento] = useState(lancamentoParaEditar?.documento || '');
   const [historico, setHistorico] = useState(lancamentoParaEditar?.historico || '');
+  const [selectedModeloId, setSelectedModeloId] = useState('');
 
   const [debitos, setDebitos] = useState(() => {
     if (!lancamentoParaEditar) return [{ id: 1, contaId: '', valor: '' }];
@@ -148,6 +149,38 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
     }
   };
 
+  // Handler de seleção rápida de modelo
+  const handleSelectModelo = (modeloId) => {
+    setSelectedModeloId(modeloId);
+    if (!modeloId) return;
+
+    const modelo = (modelosLancamento || []).find((m) => String(m.id) === String(modeloId));
+    if (!modelo) return;
+
+    // Preenche o histórico
+    setHistorico(modelo.historico);
+
+    // Preenche a conta débito
+    if (modelo.contaDebitoId) {
+      setDebitos((prev) => {
+        const val = prev[0]?.valor || '';
+        return [{ id: prev[0]?.id || 1, contaId: String(modelo.contaDebitoId), valor: val }];
+      });
+    }
+
+    // Preenche a conta crédito
+    if (modelo.contaCreditoId) {
+      setCreditos((prev) => {
+        const val = prev[0]?.valor || '';
+        return [{ id: prev[0]?.id || 2, contaId: String(modelo.contaCreditoId), valor: val }];
+      });
+    }
+  };
+
+  const handleLimparModelo = () => {
+    setSelectedModeloId('');
+  };
+
   // Handler Créditos
   const handleAddCredito = () => {
     setCreditos([...creditos, { id: Date.now(), contaId: '', valor: '' }]);
@@ -208,6 +241,7 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
         // Preserva a data, reseta os outros campos para o próximo lançamento
         setDocumento('');
         setHistorico('');
+        setSelectedModeloId('');
         setDebitos([{ id: Date.now(), contaId: '', valor: '' }]);
         setCreditos([{ id: Date.now() + 1, contaId: '', valor: '' }]);
         setMensagemSucesso('✓ Lançamento gravado com sucesso!');
@@ -248,6 +282,38 @@ export default function FormLancamento({ onSalvar, onFechar, lancamentoParaEdita
         </div>
 
         <form onSubmit={(e) => handleSaveAction(e, true)} className={styles.form} style={{ padding: '12px 16px', gap: '8px', overflowY: 'auto', maxHeight: '78vh' }}>
+          {/* SELETOR DE MODELO DE LANÇAMENTO (OPCIONAL) */}
+          {!isEditing && modelosLancamento && modelosLancamento.length > 0 && (
+            <div className={styles.modeloSelectorArea}>
+              <div className={styles.modeloLabelRow}>
+                <label className={styles.modeloLabel}>
+                  ⚡ Modelo de Lançamento <span className={styles.opcionalBadge}>(opcional para preenchimento rápido)</span>
+                </label>
+                {selectedModeloId && (
+                  <button
+                    type="button"
+                    className={styles.btnClearModelo}
+                    onClick={handleLimparModelo}
+                  >
+                    Desmarcar modelo
+                  </button>
+                )}
+              </div>
+              <select
+                className={styles.selectModelo}
+                value={selectedModeloId}
+                onChange={(e) => handleSelectModelo(e.target.value)}
+              >
+                <option value="">Selecione um modelo para preencher histórico, débito e crédito...</option>
+                {modelosLancamento.map((mod) => (
+                  <option key={mod.id} value={mod.id}>
+                    {mod.descricao} ({mod.contaDebito?.codigo || ''} ➔ {mod.contaCredito?.codigo || ''})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className={styles.formGrid} style={{ gap: '10px' }}>
             <div className={styles.formGroup}>
               <label>Data</label>
