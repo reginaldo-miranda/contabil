@@ -41,9 +41,21 @@ export default function Razao() {
     const isDevedora = contaData.natureza === 'D' || contaData.natureza === 'Devedora';
 
     if (dataInicio) {
-      const msDiaAnterior = new Date(dataInicio).getTime() - 86400000;
-      const dataAnterior = new Date(msDiaAnterior).toISOString().split('T')[0];
-      saldoAnteriorInfo = getSaldoConta(contaData.id, dataAnterior);
+      let dataAnterior = '';
+      try {
+        const parts = dataInicio.split('-').map(Number);
+        if (parts.length === 3 && !parts.some(isNaN)) {
+          const prevDate = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2] - 1));
+          dataAnterior = prevDate.toISOString().split('T')[0];
+        } else {
+          const msDiaAnterior = new Date(dataInicio).getTime() - 86400000;
+          dataAnterior = new Date(msDiaAnterior).toISOString().split('T')[0];
+        }
+      } catch {
+        dataAnterior = dataInicio;
+      }
+
+      const saldoAnteriorInfo = getSaldoConta(contaData.id, dataAnterior, contaData.codigo);
       
       const debAnt = saldoAnteriorInfo?.debitos || 0;
       const credAnt = saldoAnteriorInfo?.creditos || 0;
@@ -114,7 +126,7 @@ export default function Razao() {
       transactions,
       saldoFinal: saldoAcumulado
     };
-  }, [contaData, dataInicio, dataFim, getLancamentosPorConta, getSaldoConta]);
+  }, [contaData, dataInicio, dataFim, getLancamentosPorConta, getSaldoConta, contas]);
 
   const getIndicadorSaldo = (valor, natureza) => {
     if (valor === 0) return '';
