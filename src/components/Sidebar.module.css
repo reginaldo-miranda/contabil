@@ -237,7 +237,14 @@
   text-overflow: ellipsis;
 }
 
-.btnLogout {
+.userActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btnLogout,
+.btnPower {
   background: transparent;
   border: none;
   color: var(--text-secondary);
@@ -255,9 +262,221 @@
   color: #fb7185;
 }
 
+.btnPower:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
 .version {
   color: var(--text-muted);
   font-size: 11px;
   text-align: center;
+}
+
+/* Modal de Confirmação */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+  padding: 16px;
+}
+
+.modalContent {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  max-width: 440px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: scaleUp 0.2s ease-out;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modalIconAlert {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f43f5e;
+  margin: 0;
+}
+
+.modalDesc {
+  font-size: 14px;
+  color: var(--text-secondary, #a1a1aa);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modalInfoList {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: #d4d4d8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modalButtons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btnCancelar {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e4e4e7;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancelar:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btnDesligarConfirm {
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: #dc2626;
+  border: 1px solid #ef4444;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btnDesligarConfirm:hover:not(:disabled) {
+  background: #b91c1c;
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.5);
+}
+
+.btnDesligarConfirm:disabled,
+.btnCancelar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tela Cheia de Sistema Encerrado */
+.shutdownFullOverlay {
+  position: fixed;
+  inset: 0;
+  background: #09090b;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.4s ease;
+}
+
+.shutdownCard {
+  max-width: 480px;
+  width: 100%;
+  background: #121215;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 36px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+}
+
+.shutdownIconBadge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.15);
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.shutdownTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin: 0;
+}
+
+.shutdownMessage {
+  font-size: 14.5px;
+  color: #a1a1aa;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.shutdownCloseBtn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shutdownCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
