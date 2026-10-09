@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '../components/Sidebar';
 import SeletorEmpresa from '../components/SeletorEmpresa';
+import CardPontoEquilibrio from '../components/CardPontoEquilibrio';
 import { useContabil } from '../context/ContabilContext';
 import styles from './Dashboard.module.css';
 
@@ -77,6 +78,11 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+
+            <section className={styles.indicadores}>
+              <h2>Indicadores Gerenciais</h2>
+              <CardPontoEquilibrio />
+            </section>
 
             <div className={styles.quickAccess}>
               <h2>Acesso Rápido</h2>

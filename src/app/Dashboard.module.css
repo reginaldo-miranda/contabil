@@ -101,6 +101,17 @@
   color: var(--text-primary);
 }
 
+/* Indicadores Gerenciais */
+.indicadores {
+  margin-bottom: 40px;
+}
+
+.indicadores h2 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
 /* Quick Access Grid */
 .quickAccess {
   margin-bottom: 40px;
