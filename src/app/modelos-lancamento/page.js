@@ -38,6 +38,33 @@ export default function ModelosLancamentoPage() {
   const [erroModal, setErroModal] = useState('');
   const [salvando, setSalvando] = useState(false);
 
+  // Sorting states
+  const [ordemCampo, setOrdemCampo] = useState('descricao'); // 'descricao' | 'historico' | 'debito' | 'credito'
+  const [ordemDirecao, setOrdemDirecao] = useState('asc'); // 'asc' | 'desc'
+
+  const handleToggleOrdem = (campo) => {
+    if (ordemCampo === campo) {
+      setOrdemDirecao((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setOrdemCampo(campo);
+      setOrdemDirecao('asc');
+    }
+  };
+
+  const renderSortIndicator = (campo) => {
+    if (ordemCampo === campo) {
+      return (
+        <span 
+          className={styles.sortIcon} 
+          title={ordemDirecao === 'asc' ? 'Ordenado Crescente (A-Z) - Clique para Decrescente' : 'Ordenado Decrescente (Z-A) - Clique para Crescente'}
+        >
+          {ordemDirecao === 'asc' ? '▲' : '▼'}
+        </span>
+      );
+    }
+    return <span className={styles.sortIconInactive} title="Clique para ordenar">▲</span>;
+  };
+
   const modelosFiltrados = useMemo(() => {
     const termo = normalizeStr(busca).trim();
     if (!termo) return modelosLancamento || [];
@@ -55,6 +82,32 @@ export default function ModelosLancamentoPage() {
       return matchDesc || matchHist || matchDeb || matchCred;
     });
   }, [modelosLancamento, busca]);
+
+  const modelosOrdenados = useMemo(() => {
+    const lista = [...modelosFiltrados];
+    lista.sort((a, b) => {
+      let valA = '';
+      let valB = '';
+
+      if (ordemCampo === 'descricao') {
+        valA = a.descricao || '';
+        valB = b.descricao || '';
+      } else if (ordemCampo === 'historico') {
+        valA = a.historico || '';
+        valB = b.historico || '';
+      } else if (ordemCampo === 'debito') {
+        valA = `${a.contaDebito?.codigo || ''} ${a.contaDebito?.nome || ''}`;
+        valB = `${b.contaDebito?.codigo || ''} ${b.contaDebito?.nome || ''}`;
+      } else if (ordemCampo === 'credito') {
+        valA = `${a.contaCredito?.codigo || ''} ${a.contaCredito?.nome || ''}`;
+        valB = `${b.contaCredito?.codigo || ''} ${b.contaCredito?.nome || ''}`;
+      }
+
+      const comp = valA.localeCompare(valB, 'pt-BR', { sensitivity: 'base', numeric: true });
+      return ordemDirecao === 'asc' ? comp : -comp;
+    });
+    return lista;
+  }, [modelosFiltrados, ordemCampo, ordemDirecao]);
 
   const abrirModalCriar = () => {
     setModeloEditando(null);
@@ -127,6 +180,13 @@ export default function ModelosLancamentoPage() {
       }
       fecharModal();
     } catch (err) {
+      if (err.message?.includes('Não autenticado') && typeof window !== 'undefined') {
+        setErroModal('Sua sessão expirou. Redirecionando para a tela de login...');
+        setTimeout(() => {
+          window.location.href = '/login?expirado=true';
+        }, 1500);
+        return;
+      }
       setErroModal(err.message || 'Erro ao salvar o modelo de lançamento.');
     } finally {
       setSalvando(false);
@@ -138,6 +198,11 @@ export default function ModelosLancamentoPage() {
       try {
         await deleteModeloLancamento(id);
       } catch (err) {
+        if (err.message?.includes('Não autenticado') && typeof window !== 'undefined') {
+          alert('Sua sessão expirou. Você será redirecionado para fazer login novamente.');
+          window.location.href = '/login?expirado=true';
+          return;
+        }
         alert(err.message || 'Erro ao excluir modelo.');
       }
     }
@@ -220,15 +285,47 @@ export default function ModelosLancamentoPage() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Identificador / Nome</th>
-                    <th>Histórico Padrão</th>
-                    <th>Conta Débito</th>
-                    <th>Conta Crédito</th>
-                    <th style={{ textAlign: 'right' }}>Ações</th>
+                    <th 
+                      className={styles.thSortable} 
+                      onClick={() => handleToggleOrdem('descricao')}
+                      title="Clique para ordenar por Identificador / Nome"
+                    >
+                      <div className={styles.thContent}>
+                        Identificador / Nome {renderSortIndicator('descricao')}
+                      </div>
+                    </th>
+                    <th 
+                      className={styles.thSortable} 
+                      onClick={() => handleToggleOrdem('historico')}
+                      title="Clique para ordenar por Histórico Padrão"
+                    >
+                      <div className={styles.thContent}>
+                        Histórico Padrão {renderSortIndicator('historico')}
+                      </div>
+                    </th>
+                    <th 
+                      className={styles.thSortable} 
+                      onClick={() => handleToggleOrdem('debito')}
+                      title="Clique para ordenar por Conta Débito"
+                    >
+                      <div className={styles.thContent}>
+                        Conta Débito {renderSortIndicator('debito')}
+                      </div>
+                    </th>
+                    <th 
+                      className={styles.thSortable} 
+                      onClick={() => handleToggleOrdem('credito')}
+                      title="Clique para ordenar por Conta Crédito"
+                    >
+                      <div className={styles.thContent}>
+                        Conta Crédito {renderSortIndicator('credito')}
+                      </div>
+                    </th>
+                    <th className={styles.thActions}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {modelosFiltrados.map((m) => (
+                  {modelosOrdenados.map((m) => (
                     <tr key={m.id}>
                       <td>
                         <span className={styles.modeloNome}>{m.descricao}</span>
@@ -260,7 +357,7 @@ export default function ModelosLancamentoPage() {
                           </span>
                         </div>
                       </td>
-                      <td>
+                      <td className={styles.tdActions}>
                         <div className={styles.actions}>
                           <button
                             type="button"

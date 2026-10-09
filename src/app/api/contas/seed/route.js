@@ -134,12 +134,16 @@ export async function POST(request) {
 
     const codigoParaId = new Map();
     let count = 0;
+    let seqReduzido = 1;
 
     for (const c of contasCFC) {
       const contaPaiId = c.codigoPai ? codigoParaId.get(c.codigoPai) : null;
+      const isAnalitica = c.tipo === 'A' || c.tipo === 'Analítica';
+      const reduzido = isAnalitica ? seqReduzido++ : null;
       const conta = await prisma.conta.create({
         data: {
           codigo: c.codigo,
+          reduzido,
           nome: c.nome,
           tipo: c.tipo,
           natureza: c.natureza,

@@ -54,6 +54,7 @@ model UsuarioEmpresa {
 model Conta {
   id           Int      @id @default(autoincrement())
   codigo       String   @db.VarChar(20)
+  reduzido     Int?
   nome         String   @db.VarChar(200)
   tipo         String   @db.VarChar(10)
   natureza     String   @db.VarChar(10)
@@ -75,6 +76,7 @@ model Conta {
   padroesCredito     LancamentoPadrao[] @relation("PadraoCredito")
 
   @@unique([codigo, empresaId])
+  @@unique([empresaId, reduzido])
   @@index([empresaId])
   @@index([contaPaiId])
   @@map("contas")

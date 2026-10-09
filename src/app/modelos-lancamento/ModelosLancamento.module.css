@@ -7,7 +7,7 @@
 .main {
   flex: 1;
   margin-left: 260px;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 1.25rem;
   min-width: 0;
   max-width: calc(100vw - 260px);
   box-sizing: border-box;
@@ -194,27 +194,91 @@
 
 .tableWrapper {
   overflow-x: auto;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(129, 140, 248, 0.5) rgba(255, 255, 255, 0.05);
+  padding-bottom: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: rgba(129, 140, 248, 0.4);
+  border-radius: 6px;
+  border: 2px solid transparent;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(129, 140, 248, 0.7);
 }
 
 .table {
   width: 100%;
+  min-width: 960px;
   border-collapse: collapse;
   text-align: left;
 }
 
 .table th {
   background: rgba(255, 255, 255, 0.03);
-  padding: 1rem 1.25rem;
+  padding: 0.9rem 1rem;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border-glass);
+  white-space: nowrap;
+}
+
+.thSortable {
+  cursor: pointer;
+  user-select: none;
+  transition: var(--transition);
+}
+
+.thSortable:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+
+.thContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sortIcon {
+  font-size: 0.72rem;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.sortIconInactive {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  opacity: 0.3;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.thSortable:hover .sortIconInactive {
+  opacity: 0.7;
 }
 
 .table td {
-  padding: 1rem 1.25rem;
+  padding: 0.85rem 1rem;
   font-size: 0.875rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--text-secondary);
@@ -225,17 +289,23 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+.thActions,
+.tdActions {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .modeloNome {
   font-weight: 600;
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   display: block;
 }
 
 .historicoPreview {
   color: var(--text-secondary);
   font-size: 0.85rem;
-  max-width: 320px;
+  max-width: 280px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -246,9 +316,9 @@
 .contaBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   background: rgba(255, 255, 255, 0.04);
-  padding: 0.35rem 0.65rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.8rem;
@@ -263,6 +333,7 @@
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .tagCredito {
@@ -273,6 +344,7 @@
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .contaInfo {
@@ -280,37 +352,42 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--text-primary);
+  max-width: 210px;
+  font-size: 0.8rem;
 }
 
 .actions {
-  display: flex;
-  gap: 0.5rem;
+  display: inline-flex;
+  gap: 0.4rem;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .btnAction {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
-  padding: 0.4rem 0.75rem;
+  padding: 0.35rem 0.65rem;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   transition: var(--transition);
+  white-space: nowrap;
 }
 
 .btnAction:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .btnDelete:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.4);
   color: #f87171;
 }
 

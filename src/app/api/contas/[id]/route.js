@@ -27,11 +27,19 @@ export async function PUT(request, { params }) {
     const data = {};
     if (body.codigo !== undefined) data.codigo = body.codigo.trim();
     if (body.nome !== undefined) data.nome = body.nome.trim();
-    if (body.tipo !== undefined) data.tipo = body.tipo;
+    if (body.tipo !== undefined) {
+      data.tipo = body.tipo;
+      if (body.tipo === 'S' || body.tipo === 'Sintética') {
+        data.reduzido = null;
+      }
+    }
     if (body.natureza !== undefined) data.natureza = body.natureza;
     if (body.nivel !== undefined) data.nivel = body.nivel;
     if (body.grupo !== undefined) data.grupo = body.grupo;
     if (body.contaPaiId !== undefined) data.contaPaiId = body.contaPaiId;
+    if (body.reduzido !== undefined) {
+      data.reduzido = (body.reduzido === null || body.reduzido === '') ? null : parseInt(body.reduzido, 10);
+    }
 
     const conta = await prisma.conta.update({
       where: { id: parseInt(id) },
@@ -40,7 +48,12 @@ export async function PUT(request, { params }) {
     return NextResponse.json(conta);
   } catch (error) {
     if (error.code === 'P2002') {
-      return NextResponse.json({ erro: 'Já existe uma conta com este código nesta empresa' }, { status: 409 });
+      const isReduzidoConflict = String(error.meta?.target || '').includes('reduzido');
+      return NextResponse.json({
+        erro: isReduzidoConflict
+          ? 'Já existe uma conta com este código reduzido nesta empresa'
+          : 'Já existe uma conta com este código nesta empresa'
+      }, { status: 409 });
     }
     return NextResponse.json({ erro: 'Erro ao atualizar conta' }, { status: 500 });
   }

@@ -45,7 +45,8 @@ const ContaNode = ({
   const normBusca = normalizeStr(busca);
   const matchesSearch = normBusca !== '' && (
     normalizeStr(conta.codigo).includes(normBusca) || 
-    normalizeStr(conta.nome).includes(normBusca)
+    normalizeStr(conta.nome).includes(normBusca) ||
+    (conta.reduzido != null && (String(conta.reduzido) === normBusca.replace(/[^0-9]/g, '') || String(conta.reduzido).includes(normBusca)))
   );
 
   const isFirstMatch = firstMatchId && firstMatchId === conta.id;
@@ -96,6 +97,12 @@ const ContaNode = ({
         <span className={`${styles.codigo} ${grupoClass}`}>
           {highlightText(conta.codigo, busca)}
         </span>
+
+        {conta.reduzido != null && (
+          <span className={styles.reduzidoBadge} title={`Código reduzido para lançamentos: ${conta.reduzido}`}>
+            #{conta.reduzido}
+          </span>
+        )}
         
         <span className={styles.nome}>
           {highlightText(conta.nome, busca)}

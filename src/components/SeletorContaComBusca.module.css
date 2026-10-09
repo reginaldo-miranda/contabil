@@ -118,11 +118,27 @@
   color: #818cf8;
 }
 
+.optionItem.exactMatch {
+  background: rgba(129, 140, 248, 0.22);
+  border-left: 3px solid #818cf8;
+}
+
 .codigo {
   font-family: monospace;
   font-weight: 600;
   color: #38bdf8;
   min-width: 90px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tagReduzido {
+  color: #a78bfa;
+  font-weight: 700;
+  background: rgba(167, 139, 250, 0.15);
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
 .nome {

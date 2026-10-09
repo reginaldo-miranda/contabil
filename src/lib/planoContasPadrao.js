@@ -121,11 +121,15 @@ export const CONTAS_PADRAO_CFC = [
 
 export async function criarPlanoContasParaEmpresa(tx, empresaId) {
   const codigoParaId = new Map();
+  let seqReduzido = 1;
   for (const c of CONTAS_PADRAO_CFC) {
     const contaPaiId = c.codigoPai ? codigoParaId.get(c.codigoPai) : null;
+    const isAnalitica = c.tipo === 'Analítica' || c.tipo === 'A';
+    const reduzido = isAnalitica ? seqReduzido++ : null;
     const conta = await tx.conta.create({
       data: {
         codigo: c.codigo,
+        reduzido,
         nome: c.nome,
         tipo: c.tipo,
         natureza: c.natureza,
@@ -138,3 +142,4 @@ export async function criarPlanoContasParaEmpresa(tx, empresaId) {
     codigoParaId.set(c.codigo, conta.id);
   }
 }
+

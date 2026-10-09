@@ -210,6 +210,9 @@ export function ContabilProvider({ children }) {
         }
       } else {
         setUsuario(null);
+        if (res.status === 401 && typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login?expirado=true';
+        }
       }
     } catch (e) {
       console.error("Erro ao carregar sessão:", e);

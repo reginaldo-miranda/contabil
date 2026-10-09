@@ -61,22 +61,39 @@ export async function POST(request) {
       }
     }
 
-    // Se tem conta pai e ela era Analítica, transforma em Sintética
+    // Se tem conta pai e ela era Analítica, transforma em Sintética e limpa reduzido
     if (contaPaiId) {
       const parent = await prisma.conta.findUnique({ where: { id: contaPaiId } });
-      if (parent && parent.tipo === 'A') {
+      if (parent && (parent.tipo === 'A' || parent.tipo === 'Analítica')) {
         await prisma.conta.update({
           where: { id: contaPaiId },
-          data: { tipo: 'S' }
+          data: { tipo: 'S', reduzido: null }
         });
+      }
+    }
+
+    const tipo = body.tipo || 'A';
+    const isAnalitica = tipo === 'A' || tipo === 'Analítica';
+    let reduzido = null;
+
+    if (isAnalitica) {
+      if (body.reduzido !== undefined && body.reduzido !== null && body.reduzido !== '') {
+        reduzido = parseInt(body.reduzido, 10);
+      } else {
+        const maxReduzido = await prisma.conta.aggregate({
+          where: { empresaId },
+          _max: { reduzido: true }
+        });
+        reduzido = (maxReduzido._max.reduzido || 0) + 1;
       }
     }
 
     const conta = await prisma.conta.create({
       data: {
         codigo,
+        reduzido,
         nome: body.nome.trim(),
-        tipo: body.tipo || 'A',
+        tipo,
         natureza: body.natureza || 'D',
         nivel: body.nivel || 1,
         grupo: body.grupo || 'ATIVO',
@@ -87,7 +104,12 @@ export async function POST(request) {
     return NextResponse.json(conta, { status: 201 });
   } catch (error) {
     if (error.code === 'P2002') {
-      return NextResponse.json({ erro: 'Já existe uma conta com este código nesta empresa' }, { status: 409 });
+      const isReduzidoConflict = String(error.meta?.target || '').includes('reduzido');
+      return NextResponse.json({
+        erro: isReduzidoConflict
+          ? 'Já existe uma conta com este código reduzido nesta empresa'
+          : 'Já existe uma conta com este código nesta empresa'
+      }, { status: 409 });
     }
     return NextResponse.json({ erro: 'Erro ao criar conta' }, { status: 500 });
   }

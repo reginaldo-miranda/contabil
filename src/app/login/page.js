@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useContabil } from '@/context/ContabilContext';
 import styles from './Login.module.css';
@@ -12,6 +12,15 @@ export default function LoginPage() {
   const [tab, setTab] = useState('login'); // 'login' | 'registro'
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('expirado') === 'true') {
+        setErro('Sua sessão expirou por inatividade. Faça login novamente para continuar.');
+      }
+    }
+  }, []);
 
   // Formulário Login
   const [loginEmail, setLoginEmail] = useState('');

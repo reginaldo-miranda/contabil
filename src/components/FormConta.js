@@ -21,6 +21,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
   
   const [formData, setFormData] = useState({
     codigo: '',
+    reduzido: '',
     nome: '',
     tipo: 'S',
     natureza: 'D',
@@ -32,6 +33,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
     if (conta) {
       setFormData({
         codigo: conta.codigo || '',
+        reduzido: conta.reduzido != null ? String(conta.reduzido) : '',
         nome: conta.nome || '',
         tipo: normalizeTipo(conta.tipo),
         natureza: normalizeNatureza(conta.natureza),
@@ -42,6 +44,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
       // Auto-fill defaults for child
       setFormData({
         codigo: contaPai.codigo ? `${contaPai.codigo}.` : '',
+        reduzido: '',
         nome: '',
         tipo: 'A',
         natureza: normalizeNatureza(contaPai.natureza),
@@ -59,6 +62,9 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
     const savedData = {
       id: conta ? conta.id : undefined,
       ...formData,
+      reduzido: formData.tipo === 'A'
+        ? (formData.reduzido && formData.reduzido.trim() !== '' ? parseInt(formData.reduzido, 10) : undefined)
+        : null,
       empresaId
     };
     
@@ -126,6 +132,21 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
                 <option value="A">Analítica</option>
               </select>
             </div>
+
+            {formData.tipo === 'A' && (
+              <div className={styles.group}>
+                <label title="Número sequencial de atalho para lançamentos">
+                  Cód. Reduzido <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>(auto)</span>
+                </label>
+                <input 
+                  type="number" 
+                  min="1"
+                  value={formData.reduzido}
+                  onChange={e => setFormData({...formData, reduzido: e.target.value})}
+                  placeholder="Automático"
+                />
+              </div>
+            )}
             
             <div className={styles.group}>
               <label>Natureza</label>
