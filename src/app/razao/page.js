@@ -83,6 +83,9 @@ export default function Razao() {
       return false;
     };
 
+    let totalDebitosPeriodo = 0;
+    let totalCreditosPeriodo = 0;
+
     const transactions = [];
     (lancamentos || []).forEach(l => {
       let debitoVal = 0;
@@ -103,6 +106,9 @@ export default function Razao() {
       }
 
       if (debitoVal > 0 || creditoVal > 0) {
+        totalDebitosPeriodo += debitoVal;
+        totalCreditosPeriodo += creditoVal;
+
         if (contaData.natureza === 'D' || contaData.natureza === 'Devedora') {
           saldoAcumulado += (debitoVal - creditoVal);
         } else {
@@ -121,8 +127,15 @@ export default function Razao() {
       }
     });
 
+    const saldoPeriodo = isDevedora
+      ? (totalDebitosPeriodo - totalCreditosPeriodo)
+      : (totalCreditosPeriodo - totalDebitosPeriodo);
+
     return {
       saldoAnterior: saldoAnteriorValor,
+      totalDebitos: totalDebitosPeriodo,
+      totalCreditos: totalCreditosPeriodo,
+      saldoPeriodo,
       transactions,
       saldoFinal: saldoAcumulado
     };
@@ -204,6 +217,59 @@ export default function Razao() {
               </div>
             </div>
 
+            {/* CARDS DE RESUMO DO RAZÃO */}
+            <div className={styles.summaryCardsGrid}>
+              <div className={styles.summaryCard}>
+                <span className={styles.summaryCardLabel}>💼 Saldo Anterior</span>
+                <span className={`${styles.summaryCardValue} ${getSaldoColorClass(razaoData.saldoAnterior)}`}>
+                  {formatCurrency(Math.abs(razaoData.saldoAnterior))}
+                  {getIndicadorSaldo(razaoData.saldoAnterior, contaData.natureza) && (
+                    <span className={`${styles.badgeIndicador} ${getIndicadorSaldo(razaoData.saldoAnterior, contaData.natureza) === 'D' ? styles.badgeD : styles.badgeC}`}>
+                      {getIndicadorSaldo(razaoData.saldoAnterior, contaData.natureza)}
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className={`${styles.summaryCard} ${styles.cardDebito}`}>
+                <span className={styles.summaryCardLabel}>📈 Débitos do Período</span>
+                <span className={styles.summaryCardValue}>
+                  {formatCurrency(razaoData.totalDebitos)}
+                </span>
+              </div>
+
+              <div className={`${styles.summaryCard} ${styles.cardCredito}`}>
+                <span className={styles.summaryCardLabel}>📉 Créditos do Período</span>
+                <span className={styles.summaryCardValue}>
+                  {formatCurrency(razaoData.totalCreditos)}
+                </span>
+              </div>
+
+              <div className={`${styles.summaryCard} ${styles.cardPeriodo}`}>
+                <span className={styles.summaryCardLabel}>⚡ Movimento do Período</span>
+                <span className={`${styles.summaryCardValue} ${getSaldoColorClass(razaoData.saldoPeriodo)}`}>
+                  {formatCurrency(Math.abs(razaoData.saldoPeriodo))}
+                  {getIndicadorSaldo(razaoData.saldoPeriodo, contaData.natureza) && (
+                    <span className={`${styles.badgeIndicador} ${getIndicadorSaldo(razaoData.saldoPeriodo, contaData.natureza) === 'D' ? styles.badgeD : styles.badgeC}`}>
+                      {getIndicadorSaldo(razaoData.saldoPeriodo, contaData.natureza)}
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className={`${styles.summaryCard} ${styles.cardAcumulado}`}>
+                <span className={styles.summaryCardLabel}>🎯 Saldo Acumulado</span>
+                <span className={`${styles.summaryCardValue} ${getSaldoColorClass(razaoData.saldoFinal)}`}>
+                  {formatCurrency(Math.abs(razaoData.saldoFinal))}
+                  {getIndicadorSaldo(razaoData.saldoFinal, contaData.natureza) && (
+                    <span className={`${styles.badgeIndicador} ${getIndicadorSaldo(razaoData.saldoFinal, contaData.natureza) === 'D' ? styles.badgeD : styles.badgeC}`}>
+                      {getIndicadorSaldo(razaoData.saldoFinal, contaData.natureza)}
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+
             <div className={styles.tableContainer}>
               <table className={styles.transactionsTable}>
                 <thead>
@@ -245,8 +311,27 @@ export default function Razao() {
                     ))
                   )}
 
+                  {razaoData.transactions.length > 0 && (
+                    <tr className={styles.totalPeriodoRow}>
+                      <td colSpan="3">
+                        <strong>TOTAL DO PERÍODO</strong>
+                      </td>
+                      <td className={`${styles.numberCol} ${styles.colDebitoTotal}`}>
+                        <strong>{razaoData.totalDebitos > 0 ? formatCurrency(razaoData.totalDebitos) : '-'}</strong>
+                      </td>
+                      <td className={`${styles.numberCol} ${styles.colCreditoTotal}`}>
+                        <strong>{razaoData.totalCreditos > 0 ? formatCurrency(razaoData.totalCreditos) : '-'}</strong>
+                      </td>
+                      <td className={`${styles.numberCol} ${getSaldoColorClass(razaoData.saldoPeriodo)}`}>
+                        <strong>
+                          {formatCurrency(Math.abs(razaoData.saldoPeriodo))} {getIndicadorSaldo(razaoData.saldoPeriodo, contaData.natureza)}
+                        </strong>
+                      </td>
+                    </tr>
+                  )}
+
                   <tr className={styles.saldoFinalRow}>
-                    <td colSpan="5"><strong>SALDO FINAL</strong></td>
+                    <td colSpan="5"><strong>SALDO ACUMULADO (FINAL)</strong></td>
                     <td className={`${styles.numberCol} ${getSaldoColorClass(razaoData.saldoFinal)}`}>
                       <strong>{formatCurrency(Math.abs(razaoData.saldoFinal))} {getIndicadorSaldo(razaoData.saldoFinal, contaData.natureza)}</strong>
                     </td>
