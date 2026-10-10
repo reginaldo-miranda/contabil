@@ -139,6 +139,18 @@ if %errorlevel% neq 0 (
 echo.
 
 :: ---------------------------------------------------------
+:: PASSO 5.1: Executar Seed Inicial (Empresa, Admin e Plano de Contas)
+:: ---------------------------------------------------------
+echo Populando banco inicial com Prisma (prisma db seed)...
+npx prisma db seed
+if %errorlevel% neq 0 (
+    echo [AVISO] Prisma seed falhou ou dados ja existem.
+) else (
+    echo [SUCESSO] Seed inicial verificado/aplicado com sucesso!
+)
+echo.
+
+:: ---------------------------------------------------------
 :: PASSO 6: Limpar arquivos temporarios
 :: ---------------------------------------------------------
 if exist "%~dp0porta_detectada.txt" del "%~dp0porta_detectada.txt"

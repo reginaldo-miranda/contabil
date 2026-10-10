@@ -28,7 +28,7 @@ if (Test-Path -Path $BuildDir) {
 New-Item -ItemType Directory -Path $BuildDir | Out-Null
 
 # 3. Baixar pre-requisitos (se nao estiverem no cache)
-$NodeMsiUrl = "https://nodejs.org/dist/v18.18.2/node-v18.18.2-x64.msi"
+$NodeMsiUrl = "https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi"
 $MariaDbMsiUrl = "https://archive.mariadb.org/mariadb-10.11.5/winx64-packages/mariadb-10.11.5-winx64.msi"
 $WinSwUrl = "https://github.com/winsw/winsw/releases/download/v2.12.0/WinSW-x64.exe"
 
@@ -90,7 +90,7 @@ NODE_ENV="production"
 # 6. Copiar arquivos do projeto para o build
 Write-Host "Copiando arquivos do projeto para o build..." -ForegroundColor Green
 
-$ExcludeList = @("node_modules", ".env", ".env.local", ".git", ".gitignore", ".next", "installer", "AGENTS.md", "CLAUDE.md")
+$ExcludeList = @("node_modules", ".env", ".env.local", ".git", ".gitignore", ".next", "installer", "AGENTS.md", "CLAUDE.md", "conectar-local.bat", "conectar-nuvem.bat", "backups")
 
 # Copiar arquivos e pastas necessarios
 Get-ChildItem -Path $ProjectRoot | Where-Object { $_.Name -notin $ExcludeList } | ForEach-Object {
@@ -136,7 +136,32 @@ Write-Host "======================================================" -ForegroundC
 Write-Host "     ARQUIVOS DE BUILD PREPARADOS COM SUCESSO!" -ForegroundColor Green
 Write-Host "     Pasta: $BuildDir" -ForegroundColor Green
 Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Proximo passo:" -ForegroundColor Yellow
-Write-Host "  Abra o arquivo 'contabilpro.iss' no Inno Setup e compile." -ForegroundColor Yellow
-Write-Host "  O instalador sera gerado em: installer\Output\ContabilPro_Setup.exe" -ForegroundColor Yellow
+
+# 10. Compilar instalador com Inno Setup se disponivel
+$IsccCandidates = @(
+    "C:\Program Files\Inno Setup 7\ISCC.exe",
+    "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+    "C:\Program Files\Inno Setup 6\ISCC.exe"
+)
+
+$IsccPath = $IsccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+if ($IsccPath) {
+    Write-Host ""
+    Write-Host "Inno Setup encontrado em: $IsccPath" -ForegroundColor Cyan
+    Write-Host "Compilando instalador executavel (.exe)..." -ForegroundColor Green
+    & $IsccPath (Join-Path -Path $InstallerDir -ChildPath "contabilpro.iss")
+
+    $OutputFile = Join-Path -Path $InstallerDir -ChildPath "Output\ContabilPro_Setup.exe"
+    if (Test-Path $OutputFile) {
+        Write-Host "======================================================" -ForegroundColor Green
+        Write-Host "     INSTALADOR GERADO COM SUCESSO!" -ForegroundColor Green
+        Write-Host "     Arquivo: $OutputFile" -ForegroundColor Green
+        Write-Host "======================================================" -ForegroundColor Cyan
+    }
+} else {
+    Write-Host ""
+    Write-Host "Proximo passo:" -ForegroundColor Yellow
+    Write-Host "  Abra o arquivo 'contabilpro.iss' no Inno Setup e compile." -ForegroundColor Yellow
+    Write-Host "  O instalador sera gerado em: installer\Output\ContabilPro_Setup.exe" -ForegroundColor Yellow
+}
