@@ -539,13 +539,17 @@ export function ContabilProvider({ children }) {
         }
       });
 
-      if (conta.grupo === 'RECEITA') {
+      const codigo = String(conta.codigo || '');
+      const ehReceita = conta.grupo === 'RECEITA' || codigo.startsWith('3');
+      const ehDespesa = conta.grupo === 'DESPESA' || codigo.startsWith('4');
+
+      if (ehReceita) {
         const valor = cPeriodo - dPeriodo;
         if (valor !== 0) {
           receitas.push({ ...conta, valor });
           totalReceitas += valor;
         }
-      } else if (conta.grupo === 'DESPESA') {
+      } else if (ehDespesa) {
         const valor = dPeriodo - cPeriodo;
         if (valor !== 0) {
           despesas.push({ ...conta, valor });
@@ -578,15 +582,20 @@ export function ContabilProvider({ children }) {
       const { debitos, creditos, saldo } = getSaldoConta(conta.id, dataFim);
       if (debitos === 0 && creditos === 0) return;
 
-      if (conta.grupo === 'ATIVO') {
+      const codigo = String(conta.codigo || '');
+      const ehPL = conta.grupo === 'PL' || codigo.startsWith('2.3');
+      const ehPassivo = !ehPL && (conta.grupo === 'PASSIVO' || codigo.startsWith('2'));
+      const ehAtivo = conta.grupo === 'ATIVO' || codigo.startsWith('1');
+
+      if (ehAtivo) {
         const valor = saldo; // Devedora: D - C
         ativo.push({ ...conta, valor });
         totalAtivo += valor;
-      } else if (conta.grupo === 'PASSIVO') {
+      } else if (ehPassivo) {
         const valor = creditos - debitos; // Credora: C - D
         passivo.push({ ...conta, valor });
         totalPassivo += valor;
-      } else if (conta.grupo === 'PL') {
+      } else if (ehPL) {
         const valor = creditos - debitos;
         pl.push({ ...conta, valor });
         totalPL += valor;

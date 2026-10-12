@@ -88,15 +88,46 @@ export async function POST(request) {
       }
     }
 
+    // Determina grupo e natureza corretos pelo pai ou pelo prefixo do código
+    let grupoCalculado = body.grupo || null;
+    let naturezaCalculada = body.natureza || null;
+
+    if (!grupoCalculado || !naturezaCalculada) {
+      if (contaPaiId) {
+        const parent = await prisma.conta.findUnique({ where: { id: contaPaiId } });
+        if (parent) {
+          if (!grupoCalculado) grupoCalculado = parent.grupo;
+          if (!naturezaCalculada) naturezaCalculada = parent.natureza;
+        }
+      }
+    }
+
+    if (!grupoCalculado) {
+      if (codigo.startsWith('1')) grupoCalculado = 'ATIVO';
+      else if (codigo.startsWith('2.3')) grupoCalculado = 'PL';
+      else if (codigo.startsWith('2')) grupoCalculado = 'PASSIVO';
+      else if (codigo.startsWith('3')) grupoCalculado = 'RECEITA';
+      else if (codigo.startsWith('4')) grupoCalculado = 'DESPESA';
+      else grupoCalculado = 'ATIVO';
+    }
+
+    if (!naturezaCalculada) {
+      if (grupoCalculado === 'ATIVO' || grupoCalculado === 'DESPESA') {
+        naturezaCalculada = 'D';
+      } else {
+        naturezaCalculada = 'C';
+      }
+    }
+
     const conta = await prisma.conta.create({
       data: {
         codigo,
         reduzido,
         nome: body.nome.trim(),
         tipo,
-        natureza: body.natureza || 'D',
+        natureza: naturezaCalculada,
         nivel: body.nivel || 1,
-        grupo: body.grupo || 'ATIVO',
+        grupo: grupoCalculado,
         contaPaiId,
         empresaId,
       },
