@@ -127,6 +127,12 @@ export async function POST(request) {
       }
     }
 
+    const primeiraData = notasExtraidas[0]?.dataEmissao;
+    let competenciaDetectada = null;
+    if (primeiraData instanceof Date && !isNaN(primeiraData.getTime())) {
+      competenciaDetectada = primeiraData.toISOString().slice(0, 7);
+    }
+
     return NextResponse.json({
       sucesso: true,
       totalArquivosProcessados: files.length,
@@ -136,7 +142,8 @@ export async function POST(request) {
       valorTotalGeral,
       totalMonofasicoGeral,
       totalStGeral,
-      itensMonofasicosAuditados: itensMonofasicosCount
+      itensMonofasicosAuditados: itensMonofasicosCount,
+      competenciaDetectada
     });
   } catch (error) {
     console.error('Erro ao importar XMLs fiscais:', error);

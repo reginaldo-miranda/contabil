@@ -124,6 +124,20 @@ export async function POST(request) {
         contaCreditoNome: mapaContas.get(l.contaCreditoId) || 'Conta não selecionada'
       }));
 
+      let competenciasPendentes = [];
+      if (previewFormatado.length === 0) {
+        const outras = await prisma.notaFiscal.findMany({
+          where: {
+            empresaId: empId,
+            tipoOperacao: 'SAIDA',
+            integradaContabil: false
+          },
+          select: { dataEmissao: true },
+          take: 20
+        });
+        competenciasPendentes = [...new Set(outras.map(n => n.dataEmissao.toISOString().slice(0, 7)))];
+      }
+
       return NextResponse.json({
         preview: true,
         competencia,
@@ -136,6 +150,7 @@ export async function POST(request) {
           debitoImpostoId,
           creditoImpostoId
         },
+        competenciasPendentes,
         lancamentos: previewFormatado
       });
     }

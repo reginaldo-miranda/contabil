@@ -51,13 +51,16 @@ export default function FiscalPage() {
   const [mensagemSucesso, setMensagemSucesso] = useState('');
   const [mensagemErro, setMensagemErro] = useState('');
 
-  // Carrega dados ao trocar empresa, competência ou anexo
+  // Carrega dados ao trocar empresa, competência, anexo ou aba
   useEffect(() => {
     if (empresaId) {
       carregarNotas();
       carregarDadosApuracao();
+      if (abaAtiva === 'integracao') {
+        handleCarregarPreviewIntegracao();
+      }
     }
-  }, [empresaId, competencia, anexo]);
+  }, [empresaId, competencia, anexo, abaAtiva]);
 
   const carregarNotas = async () => {
     if (!empresaId) return;
@@ -126,6 +129,11 @@ export default function FiscalPage() {
       setArquivosSelecionados([]);
       setMensagemSucesso(`✅ Sucesso! ${data.totalNotasLidas} nota(s) importada(s), sendo ${data.itensMonofasicosAuditados} item(ns) com benefício fiscal identificado.`);
       
+      // Se detectou a competência da nota importada, atualiza automaticamente a tela para esse mês!
+      if (data.competenciaDetectada) {
+        setCompetencia(data.competenciaDetectada);
+      }
+
       // Atualiza notas e apuração automaticamente
       await carregarNotas();
       await carregarDadosApuracao();
@@ -666,7 +674,29 @@ export default function FiscalPage() {
               <div className={styles.alertaVazio}>Carregando conferência prévia dos lançamentos...</div>
             ) : !previewIntegracao?.lancamentos || previewIntegracao.lancamentos.length === 0 ? (
               <div className={styles.alertaVazio}>
-                Não há lançamentos fiscais pendentes de integração contábil nesta competência. Todas as notas já estão no Diário!
+                <p style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>
+                  Não há lançamentos fiscais pendentes de integração na competência <strong>{competencia}</strong>.
+                </p>
+                {previewIntegracao?.competenciasPendentes && previewIntegracao.competenciasPendentes.length > 0 && (
+                  <div style={{ background: 'rgba(129, 140, 248, 0.08)', border: '1px solid rgba(129, 140, 248, 0.3)', padding: '1.25rem 2rem', borderRadius: '12px', display: 'inline-block', textAlign: 'center' }}>
+                    <p style={{ color: 'var(--text-primary)', marginBottom: '0.75rem', fontWeight: 600 }}>
+                      💡 Encontramos notas pendentes em outro período:
+                    </p>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      {previewIntegracao.competenciasPendentes.map((comp) => (
+                        <button
+                          key={comp}
+                          className={styles.btnPrimario}
+                          onClick={() => {
+                            setCompetencia(comp);
+                          }}
+                        >
+                          👉 Mudar para {comp}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className={styles.tabelaContainer}>
