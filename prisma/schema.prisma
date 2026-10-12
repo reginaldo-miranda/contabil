@@ -17,6 +17,8 @@ model Empresa {
   lancamentos Lancamento[]
   lancamentosPadrao LancamentoPadrao[]
   usuarios    UsuarioEmpresa[]
+  notasFiscais NotaFiscal[]
+  apuracoesFiscais ApuracaoFiscal[]
 
   @@map("empresas")
 }
@@ -123,5 +125,116 @@ model LancamentoPadrao {
   @@index([contaCreditoId])
   @@map("lancamentos_padrao")
 }
+
+model NotaFiscal {
+  id                  Int               @id @default(autoincrement())
+  chaveAcesso         String            @unique @map("chave_acesso") @db.VarChar(44)
+  numero              String            @db.VarChar(20)
+  serie               String            @default("1") @db.VarChar(10)
+  modelo              String            @default("55") @db.VarChar(5) // 55 = NF-e, 65 = NFC-e
+  tipoOperacao        String            @default("SAIDA") @map("tipo_operacao") @db.VarChar(10) // SAIDA ou ENTRADA
+  dataEmissao         DateTime          @map("data_emissao") @db.Date
+  naturezaOp          String?           @map("natureza_op") @db.VarChar(150)
+  
+  // Emitente
+  emitenteCnpj        String            @map("emitente_cnpj") @db.VarChar(20)
+  emitenteNome        String            @map("emitente_nome") @db.VarChar(200)
+  emitenteUf          String?           @map("emitente_uf") @db.VarChar(2)
+
+  // Destinatário
+  destinatarioCpfCnpj String?           @map("destinatario_cpf_cnpj") @db.VarChar(20)
+  destinatarioNome    String?           @map("destinatario_nome") @db.VarChar(200)
+  destinatarioUf      String?           @map("destinatario_uf") @db.VarChar(2)
+
+  // Totais
+  valorProdutos       Decimal           @default(0) @map("valor_produtos") @db.Decimal(15, 2)
+  valorFrete          Decimal           @default(0) @map("valor_frete") @db.Decimal(15, 2)
+  valorDesconto       Decimal           @default(0) @map("valor_desconto") @db.Decimal(15, 2)
+  valorTotal          Decimal           @map("valor_total") @db.Decimal(15, 2)
+
+  // Tributos destacados
+  valorIcms           Decimal           @default(0) @map("valor_icms") @db.Decimal(15, 2)
+  valorPis            Decimal           @default(0) @map("valor_pis") @db.Decimal(15, 2)
+  valorCofins         Decimal           @default(0) @map("valor_cofins") @db.Decimal(15, 2)
+
+  // Integração Contábil
+  integradaContabil   Boolean           @default(false) @map("integrada_contabil")
+  lancamentoId        Int?              @map("lancamento_id")
+
+  empresaId           Int               @map("empresa_id")
+  empresa             Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  itens               ItemNotaFiscal[]
+
+  criadoEm            DateTime          @default(now()) @map("criado_em")
+  atualizadoEm        DateTime          @updatedAt @map("atualizado_em")
+
+  @@index([empresaId, dataEmissao])
+  @@index([empresaId, tipoOperacao])
+  @@map("notas_fiscais")
+}
+
+model ItemNotaFiscal {
+  id                    Int          @id @default(autoincrement())
+  notaFiscalId          Int          @map("nota_fiscal_id")
+  numeroItem            Int          @map("numero_item")
+  codigoProduto         String       @map("codigo_produto") @db.VarChar(60)
+  descricao             String       @db.VarChar(255)
+  ncm                   String       @db.VarChar(10)
+  cfop                  String       @db.VarChar(10)
+  unidade               String       @default("UN") @db.VarChar(10)
+  quantidade            Decimal      @db.Decimal(15, 4)
+  valorUnitario         Decimal      @map("valor_unitario") @db.Decimal(15, 4)
+  valorTotal            Decimal      @map("valor_total") @db.Decimal(15, 2)
+
+  // Tributação
+  cstCsosn              String?      @map("cst_csosn") @db.VarChar(10)
+  monofasico            Boolean      @default(false)
+  motivoMonofasico      String?      @map("motivo_monofasico") @db.VarChar(100)
+  substituicaoTributaria Boolean     @default(false) @map("substituicao_tributaria")
+
+  notaFiscal            NotaFiscal   @relation(fields: [notaFiscalId], references: [id], onDelete: Cascade)
+
+  @@index([notaFiscalId])
+  @@index([ncm])
+  @@map("itens_nota_fiscal")
+}
+
+model ApuracaoFiscal {
+  id                    Int       @id @default(autoincrement())
+  empresaId             Int       @map("empresa_id")
+  competencia           String    @db.VarChar(7) // Formato "YYYY-MM"
+  regime                String    @default("SIMPLES_NACIONAL") @db.VarChar(30)
+  
+  // Receita
+  faturamentoTotal      Decimal   @default(0) @map("faturamento_total") @db.Decimal(15, 2)
+  faturamentoTributado  Decimal   @default(0) @map("faturamento_tributado") @db.Decimal(15, 2)
+  faturamentoMonofasico Decimal   @default(0) @map("faturamento_monofasico") @db.Decimal(15, 2)
+  faturamentoSt         Decimal   @default(0) @map("faturamento_st") @db.Decimal(15, 2)
+
+  // Simples Nacional
+  rbt12                 Decimal   @default(0) @db.Decimal(15, 2)
+  anexo                 String    @default("ANEXO_I") @db.VarChar(20)
+  aliquotaNominal       Decimal   @default(0) @map("aliquota_nominal") @db.Decimal(6, 4)
+  parcelaDeduzir        Decimal   @default(0) @map("parcela_deduzir") @db.Decimal(15, 2)
+  aliquotaEfetiva       Decimal   @default(0) @map("aliquota_efetiva") @db.Decimal(6, 4)
+
+  // Valores Finais
+  valorDasSemOtimizacao Decimal   @default(0) @map("valor_das_sem_otimizacao") @db.Decimal(15, 2)
+  valorDasFinal         Decimal   @default(0) @map("valor_das_final") @db.Decimal(15, 2)
+  economiaGerada        Decimal   @default(0) @map("economia_gerada") @db.Decimal(15, 2)
+
+  // Integração Contábil da Apuração
+  integradoContabil     Boolean   @default(false) @map("integrado_contabil")
+  lancamentoId          Int?      @map("lancamento_id")
+
+  empresa               Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  criadoEm              DateTime  @default(now()) @map("criado_em")
+  atualizadoEm          DateTime  @updatedAt @map("atualizado_em")
+
+  @@unique([empresaId, competencia])
+  @@map("apuracoes_fiscais")
+}
+
 
 

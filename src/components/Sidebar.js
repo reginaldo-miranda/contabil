@@ -42,6 +42,7 @@ export default function Sidebar() {
     { id: 'plano-de-contas', href: '/plano-de-contas', label: 'Plano de Contas', icon: '📋' },
     { id: 'lancamentos', href: '/lancamentos', label: 'Lançamentos', icon: '📝' },
     { id: 'modelos-lancamento', href: '/modelos-lancamento', label: 'Modelos de Lançamento', icon: '⚡' },
+    { id: 'fiscal', href: '/fiscal', label: 'Fiscal & XMLs', icon: '📑' },
     { id: 'diario', href: '/diario', label: 'Livro Diário', icon: '📒' },
     { id: 'razao', href: '/razao', label: 'Livro Razão', icon: '📖' },
     { id: 'balancete', href: '/balancete', label: 'Balancete', icon: '📄' },
@@ -58,7 +59,7 @@ export default function Sidebar() {
   // Filtrar links conforme as permissões do usuário na empresa atual
   const links = todosLinks.filter((link) => {
     if (link.id === 'dashboard' || link.id === 'usuarios') return true;
-    if (link.id === 'modelos-lancamento') return temPermissao('lancamentos');
+    if (link.id === 'modelos-lancamento' || link.id === 'fiscal') return temPermissao('lancamentos');
     return temPermissao(link.id);
   });
 

@@ -1,0 +1,516 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px 40px;
+  max-width: calc(100vw - 260px);
+  min-width: 0;
+  box-sizing: border-box;
+  width: calc(100% - 260px);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.titleArea h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.controlesCompetencia {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+}
+
+.controleGrupo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controleGrupo label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.inputCompetencia,
+.selectAnexo {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.inputCompetencia:focus,
+.selectAnexo:focus {
+  border-color: var(--accent);
+}
+
+/* Abas */
+.tabsBar {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-glass);
+  margin-bottom: 2rem;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.85rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tabBtn:hover {
+  color: var(--text-primary);
+}
+
+.tabAtiva {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: rgba(129, 140, 248, 0.05);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* ÁREA DE UPLOAD */
+.uploadSection {
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+}
+
+.dropzone {
+  border: 2px dashed rgba(129, 140, 248, 0.4);
+  border-radius: var(--radius);
+  padding: 3.5rem 2rem;
+  text-align: center;
+  background: rgba(129, 140, 248, 0.02);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone:hover,
+.dropzoneDragging {
+  border-color: var(--accent);
+  background: rgba(129, 140, 248, 0.08);
+  transform: translateY(-2px);
+}
+
+.dropzoneIcon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.dropzoneTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.dropzoneText {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  max-width: 500px;
+  line-height: 1.5;
+}
+
+.btnUpload {
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+}
+
+.btnUpload:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.listaArquivosSelecionados {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.itemArquivo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.progressoContainer {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+/* PAINEL DE ECONOMIA & CARDS */
+.gridMetricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.cardMetrica {
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+.cardDestaqueEconomia {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1), rgba(16, 185, 129, 0.04));
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.12);
+}
+
+.cardMetricaLabel {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardMetricaValor {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0.75rem 0;
+}
+
+.cardMetricaValorDestaque {
+  color: var(--ativo);
+  text-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+}
+
+.cardMetricaDetalhe {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.badgeSucesso {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--ativo);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badgeMonofasico {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--despesa);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* MEMÓRIA DE CÁLCULO */
+.memoriaCalculoBox {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.memoriaCalculoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.gridCalculo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.itemCalculo {
+  background: var(--bg-primary);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+}
+
+.itemCalculoLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.itemCalculoValor {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 0.25rem;
+}
+
+/* TABELA DE NOTAS */
+.toolbarTabela {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buscaInput {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  width: 320px;
+}
+
+.tabelaContainer {
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.tabelaFiscal {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.tabelaFiscal th {
+  background: var(--bg-secondary);
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.tabelaFiscal td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-glass);
+  color: var(--text-primary);
+}
+
+.tabelaFiscal tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* INTEGRAÇÃO CONTÁBIL */
+.cardIntegracao {
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+.acoesIntegracao {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+
+.btnSecundario {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btnSecundario:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btnPrimario {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  box-shadow: 0 4px 14px rgba(129, 140, 248, 0.3);
+}
+
+.btnPrimario:hover {
+  background: var(--accent-hover);
+}
+
+.alertaVazio {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+/* CONFIGURAÇÃO E SELEÇÃO DE CONTAS CONTÁBEIS */
+.configContasBox {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.configContasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.configContasTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.configContasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.configContaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.configContaLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.selectConta {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: var(--transition);
+  cursor: pointer;
+  width: 100%;
+}
+
+.selectConta:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+
+.selectContaTabela {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+  width: 100%;
+  min-width: 200px;
+  max-width: 280px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.selectContaTabela:focus {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.selectDebito {
+  border-left: 3px solid var(--ativo);
+}
+
+.selectCredito {
+  border-left: 3px solid var(--passivo);
+}
+
