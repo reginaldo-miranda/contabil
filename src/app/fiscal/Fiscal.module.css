@@ -421,3 +421,96 @@
   padding: 3rem;
   color: var(--text-muted);
 }
+
+/* CONFIGURAÇÃO E SELEÇÃO DE CONTAS CONTÁBEIS */
+.configContasBox {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.configContasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.configContasTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.configContasGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.configContaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.configContaLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.selectConta {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: var(--transition);
+  cursor: pointer;
+  width: 100%;
+}
+
+.selectConta:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+
+.selectContaTabela {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  outline: none;
+  width: 100%;
+  min-width: 200px;
+  max-width: 280px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.selectContaTabela:focus {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.selectDebito {
+  border-left: 3px solid var(--ativo);
+}
+
+.selectCredito {
+  border-left: 3px solid var(--passivo);
+}
+

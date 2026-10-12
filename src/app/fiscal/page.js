@@ -48,6 +48,11 @@ export default function FiscalPage() {
   const [previewIntegracao, setPreviewIntegracao] = useState(null);
   const [carregandoPreview, setCarregandoPreview] = useState(false);
   const [integrando, setIntegrando] = useState(false);
+  const [contasDisponiveis, setContasDisponiveis] = useState([]);
+  const [contaDebitoVendaPadrao, setContaDebitoVendaPadrao] = useState('');
+  const [contaCreditoVendaPadrao, setContaCreditoVendaPadrao] = useState('');
+  const [contaDebitoImpostoPadrao, setContaDebitoImpostoPadrao] = useState('');
+  const [contaCreditoImpostoPadrao, setContaCreditoImpostoPadrao] = useState('');
   const [mensagemSucesso, setMensagemSucesso] = useState('');
   const [mensagemErro, setMensagemErro] = useState('');
 
@@ -221,16 +226,123 @@ export default function FiscalPage() {
           empresaId: empresaId,
           competencia,
           preview: true,
+          contaDebitoVendaId: contaDebitoVendaPadrao || undefined,
+          contaCreditoVendaId: contaCreditoVendaPadrao || undefined,
+          contaDebitoImpostoId: contaDebitoImpostoPadrao || undefined,
+          contaCreditoImpostoId: contaCreditoImpostoPadrao || undefined,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.erro);
       setPreviewIntegracao(data);
+
+      if (data.contasDisponiveis) {
+        setContasDisponiveis(data.contasDisponiveis);
+      }
+      if (data.contasSugeridas) {
+        if (!contaDebitoVendaPadrao && data.contasSugeridas.debitoVendaId) {
+          setContaDebitoVendaPadrao(data.contasSugeridas.debitoVendaId);
+        }
+        if (!contaCreditoVendaPadrao && data.contasSugeridas.creditoVendaId) {
+          setContaCreditoVendaPadrao(data.contasSugeridas.creditoVendaId);
+        }
+        if (!contaDebitoImpostoPadrao && data.contasSugeridas.debitoImpostoId) {
+          setContaDebitoImpostoPadrao(data.contasSugeridas.debitoImpostoId);
+        }
+        if (!contaCreditoImpostoPadrao && data.contasSugeridas.creditoImpostoId) {
+          setContaCreditoImpostoPadrao(data.contasSugeridas.creditoImpostoId);
+        }
+      }
     } catch (err) {
       setMensagemErro('Erro ao carregar prévia: ' + err.message);
     } finally {
       setCarregandoPreview(false);
+    }
+  };
+
+  // Altera conta individual de uma linha na tabela
+  const handleAlterarContaLinha = (index, campo, novoId) => {
+    if (!previewIntegracao?.lancamentos) return;
+    const contaIdNum = Number(novoId) || null;
+    const novosLancamentos = [...previewIntegracao.lancamentos];
+    const contaObj = contasDisponiveis.find((c) => c.id === contaIdNum);
+    novosLancamentos[index] = {
+      ...novosLancamentos[index],
+      [campo]: contaIdNum,
+      [campo === 'contaDebitoId' ? 'contaDebitoNome' : 'contaCreditoNome']: contaObj ? `${contaObj.codigo} - ${contaObj.nome}` : 'Conta não selecionada'
+    };
+    setPreviewIntegracao({
+      ...previewIntegracao,
+      lancamentos: novosLancamentos
+    });
+  };
+
+  // Altera conta padrão global e replica para todas as linhas correspondentes
+  const handleMudarContaPadrao = (tipo, novoId) => {
+    const contaIdNum = Number(novoId) || null;
+    const contaObj = contasDisponiveis.find((c) => c.id === contaIdNum);
+
+    if (tipo === 'debitoVenda') {
+      setContaDebitoVendaPadrao(contaIdNum || '');
+      if (previewIntegracao?.lancamentos) {
+        const atualizados = previewIntegracao.lancamentos.map((l) => {
+          if (l.tipo === 'VENDA_NFE') {
+            return {
+              ...l,
+              contaDebitoId: contaIdNum,
+              contaDebitoNome: contaObj ? `${contaObj.codigo} - ${contaObj.nome}` : l.contaDebitoNome
+            };
+          }
+          return l;
+        });
+        setPreviewIntegracao({ ...previewIntegracao, lancamentos: atualizados });
+      }
+    } else if (tipo === 'creditoVenda') {
+      setContaCreditoVendaPadrao(contaIdNum || '');
+      if (previewIntegracao?.lancamentos) {
+        const atualizados = previewIntegracao.lancamentos.map((l) => {
+          if (l.tipo === 'VENDA_NFE') {
+            return {
+              ...l,
+              contaCreditoId: contaIdNum,
+              contaCreditoNome: contaObj ? `${contaObj.codigo} - ${contaObj.nome}` : l.contaCreditoNome
+            };
+          }
+          return l;
+        });
+        setPreviewIntegracao({ ...previewIntegracao, lancamentos: atualizados });
+      }
+    } else if (tipo === 'debitoImposto') {
+      setContaDebitoImpostoPadrao(contaIdNum || '');
+      if (previewIntegracao?.lancamentos) {
+        const atualizados = previewIntegracao.lancamentos.map((l) => {
+          if (l.tipo === 'APURACAO_DAS') {
+            return {
+              ...l,
+              contaDebitoId: contaIdNum,
+              contaDebitoNome: contaObj ? `${contaObj.codigo} - ${contaObj.nome}` : l.contaDebitoNome
+            };
+          }
+          return l;
+        });
+        setPreviewIntegracao({ ...previewIntegracao, lancamentos: atualizados });
+      }
+    } else if (tipo === 'creditoImposto') {
+      setContaCreditoImpostoPadrao(contaIdNum || '');
+      if (previewIntegracao?.lancamentos) {
+        const atualizados = previewIntegracao.lancamentos.map((l) => {
+          if (l.tipo === 'APURACAO_DAS') {
+            return {
+              ...l,
+              contaCreditoId: contaIdNum,
+              contaCreditoNome: contaObj ? `${contaObj.codigo} - ${contaObj.nome}` : l.contaCreditoNome
+            };
+          }
+          return l;
+        });
+        setPreviewIntegracao({ ...previewIntegracao, lancamentos: atualizados });
+      }
     }
   };
 
@@ -247,6 +359,11 @@ export default function FiscalPage() {
           empresaId: empresaId,
           competencia,
           preview: false,
+          contaDebitoVendaId: contaDebitoVendaPadrao || undefined,
+          contaCreditoVendaId: contaCreditoVendaPadrao || undefined,
+          contaDebitoImpostoId: contaDebitoImpostoPadrao || undefined,
+          contaCreditoImpostoId: contaCreditoImpostoPadrao || undefined,
+          lancamentos: previewIntegracao?.lancamentos,
         }),
       });
 
@@ -699,32 +816,152 @@ export default function FiscalPage() {
                 )}
               </div>
             ) : (
-              <div className={styles.tabelaContainer}>
-                <table className={styles.tabelaFiscal}>
-                  <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Documento</th>
-                      <th>Conta Débito</th>
-                      <th>Conta Crédito</th>
-                      <th>Valor (R$)</th>
-                      <th>Histórico Rastreável</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewIntegracao.lancamentos.map((l, i) => (
-                      <tr key={i}>
-                        <td>{new Date(l.data).toLocaleDateString('pt-BR')}</td>
-                        <td style={{ fontWeight: 600 }}>{l.documento}</td>
-                        <td style={{ color: 'var(--ativo)' }}>{l.contaDebitoNome}</td>
-                        <td style={{ color: 'var(--passivo)' }}>{l.contaCreditoNome}</td>
-                        <td style={{ fontWeight: 600 }}>{formatarMoeda(l.valor)}</td>
-                        <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{l.historico}</td>
+              <>
+                {/* PAINEL DE CONTAS PADRÃO DO LOTE */}
+                <div className={styles.configContasBox}>
+                  <div className={styles.configContasHeader}>
+                    <span className={styles.configContasTitle}>
+                      ⚙️ Selecionar Contas Contábeis Padrão para este Lote
+                    </span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      Você pode alterar o padrão do lote aqui ou personalizar cada nota diretamente na tabela abaixo.
+                    </span>
+                  </div>
+                  <div className={styles.configContasGrid}>
+                    <div className={styles.configContaItem}>
+                      <label className={styles.configContaLabel}>
+                        <span style={{ color: 'var(--ativo)' }}>●</span> Débito das Vendas (Ativo / Clientes / Caixa):
+                      </label>
+                      <select
+                        className={`${styles.selectConta} ${styles.selectDebito}`}
+                        value={contaDebitoVendaPadrao || ''}
+                        onChange={(e) => handleMudarContaPadrao('debitoVenda', e.target.value)}
+                      >
+                        <option value="">Selecione a conta...</option>
+                        {contasDisponiveis.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.codigo} - {c.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className={styles.configContaItem}>
+                      <label className={styles.configContaLabel}>
+                        <span style={{ color: 'var(--passivo)' }}>●</span> Crédito das Vendas (Receita / Mercadorias):
+                      </label>
+                      <select
+                        className={`${styles.selectConta} ${styles.selectCredito}`}
+                        value={contaCreditoVendaPadrao || ''}
+                        onChange={(e) => handleMudarContaPadrao('creditoVenda', e.target.value)}
+                      >
+                        <option value="">Selecione a conta...</option>
+                        {contasDisponiveis.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.codigo} - {c.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {previewIntegracao.lancamentos.some((l) => l.tipo === 'APURACAO_DAS') && (
+                      <>
+                        <div className={styles.configContaItem}>
+                          <label className={styles.configContaLabel}>
+                            <span style={{ color: 'var(--ativo)' }}>●</span> Débito da Provisão do Simples (Despesa / Impostos):
+                          </label>
+                          <select
+                            className={`${styles.selectConta} ${styles.selectDebito}`}
+                            value={contaDebitoImpostoPadrao || ''}
+                            onChange={(e) => handleMudarContaPadrao('debitoImposto', e.target.value)}
+                          >
+                            <option value="">Selecione a conta...</option>
+                            {contasDisponiveis.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.codigo} - {c.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className={styles.configContaItem}>
+                          <label className={styles.configContaLabel}>
+                            <span style={{ color: 'var(--passivo)' }}>●</span> Crédito do Simples a Recolher (Passivo Circulante):
+                          </label>
+                          <select
+                            className={`${styles.selectConta} ${styles.selectCredito}`}
+                            value={contaCreditoImpostoPadrao || ''}
+                            onChange={(e) => handleMudarContaPadrao('creditoImposto', e.target.value)}
+                          >
+                            <option value="">Selecione a conta...</option>
+                            {contasDisponiveis.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.codigo} - {c.nome}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* TABELA DE LANÇAMENTOS COM SELEÇÃO LINHA A LINHA */}
+                <div className={styles.tabelaContainer}>
+                  <table className={styles.tabelaFiscal}>
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Documento</th>
+                        <th style={{ minWidth: '220px' }}>Conta Débito</th>
+                        <th style={{ minWidth: '220px' }}>Conta Crédito</th>
+                        <th>Valor (R$)</th>
+                        <th>Histórico Rastreável</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {previewIntegracao.lancamentos.map((l, i) => (
+                        <tr key={i}>
+                          <td>{new Date(l.data).toLocaleDateString('pt-BR')}</td>
+                          <td style={{ fontWeight: 600 }}>{l.documento}</td>
+                          <td>
+                            <select
+                              className={`${styles.selectContaTabela} ${styles.selectDebito}`}
+                              value={l.contaDebitoId || ''}
+                              onChange={(e) => handleAlterarContaLinha(i, 'contaDebitoId', e.target.value)}
+                              title={l.contaDebitoNome}
+                            >
+                              <option value="">Selecione a conta...</option>
+                              {contasDisponiveis.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.codigo} - {c.nome}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td>
+                            <select
+                              className={`${styles.selectContaTabela} ${styles.selectCredito}`}
+                              value={l.contaCreditoId || ''}
+                              onChange={(e) => handleAlterarContaLinha(i, 'contaCreditoId', e.target.value)}
+                              title={l.contaCreditoNome}
+                            >
+                              <option value="">Selecione a conta...</option>
+                              {contasDisponiveis.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.codigo} - {c.nome}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td style={{ fontWeight: 600 }}>{formatarMoeda(l.valor)}</td>
+                          <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{l.historico}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </section>
         )}

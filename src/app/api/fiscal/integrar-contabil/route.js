@@ -155,13 +155,23 @@ export async function POST(request) {
           debitoImpostoId,
           creditoImpostoId
         },
+        contasDisponiveis: contasEmpresa.map(c => ({
+          id: c.id,
+          codigo: c.codigo,
+          nome: c.nome
+        })),
         competenciasPendentes,
         lancamentos: previewFormatado
       });
     }
 
     // 5. MODO EXECUÇÃO REAL (Grava no banco em transação)
-    if (lancamentosSugeridos.length === 0) {
+    const { lancamentos: lancamentosRecebidos = null } = body;
+    const listaParaGravar = (Array.isArray(lancamentosRecebidos) && lancamentosRecebidos.length > 0)
+      ? lancamentosRecebidos
+      : lancamentosSugeridos;
+
+    if (listaParaGravar.length === 0) {
       return NextResponse.json({
         sucesso: true,
         mensagem: 'Não há novos registros pendentes de integração nesta competência.',
@@ -172,24 +182,24 @@ export async function POST(request) {
     let criadosCount = 0;
 
     await prisma.$transaction(async (tx) => {
-      for (const item of lancamentosSugeridos) {
+      for (const item of listaParaGravar) {
         if (!item.contaDebitoId || !item.contaCreditoId) continue;
 
         const lancamento = await tx.lancamento.create({
           data: {
             data: new Date(item.data),
             documento: item.documento,
-            valor: item.valor,
+            valor: Number(item.valor),
             historico: item.historico,
-            contaDebitoId: item.contaDebitoId,
-            contaCreditoId: item.contaCreditoId,
+            contaDebitoId: Number(item.contaDebitoId),
+            contaCreditoId: Number(item.contaCreditoId),
             empresaId: empId
           }
         });
 
         criadosCount++;
 
-        if (item.tipo === 'VENDA_NFE') {
+        if (item.tipo === 'VENDA_NFE' && item.origemId) {
           await tx.notaFiscal.update({
             where: { id: item.origemId },
             data: {
@@ -197,7 +207,7 @@ export async function POST(request) {
               lancamentoId: lancamento.id
             }
           });
-        } else if (item.tipo === 'APURACAO_DAS') {
+        } else if (item.tipo === 'APURACAO_DAS' && item.origemId) {
           await tx.apuracaoFiscal.update({
             where: { id: item.origemId },
             data: {
