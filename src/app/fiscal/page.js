@@ -17,7 +17,7 @@ const formatarPorcentagem = (valor) => {
 };
 
 export default function FiscalPage() {
-  const { empresaAtiva, carregarLancamentos, carregarDados } = useContabil();
+  const { empresaId, refreshData } = useContabil();
 
   // Competência padrão: Mês atual
   const hoje = new Date();
@@ -29,6 +29,7 @@ export default function FiscalPage() {
   // Estados de Upload
   const [arquivosSelecionados, setArquivosSelecionados] = useState([]);
   const [uploadando, setUploadando] = useState(false);
+  const [statusProgresso, setStatusProgresso] = useState('');
   const [resultadoUpload, setResultadoUpload] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -52,17 +53,17 @@ export default function FiscalPage() {
 
   // Carrega dados ao trocar empresa, competência ou anexo
   useEffect(() => {
-    if (empresaAtiva?.id) {
+    if (empresaId) {
       carregarNotas();
       carregarDadosApuracao();
     }
-  }, [empresaAtiva?.id, competencia, anexo]);
+  }, [empresaId, competencia, anexo]);
 
   const carregarNotas = async () => {
-    if (!empresaAtiva?.id) return;
+    if (!empresaId) return;
     try {
       setCarregandoNotas(true);
-      const res = await fetch(`/api/fiscal/notas?empresaId=${empresaAtiva.id}&competencia=${competencia}`);
+      const res = await fetch(`/api/fiscal/notas?empresaId=${empresaId}&competencia=${competencia}`);
       if (res.ok) {
         const data = await res.json();
         setNotas(data);
@@ -75,10 +76,10 @@ export default function FiscalPage() {
   };
 
   const carregarDadosApuracao = async () => {
-    if (!empresaAtiva?.id) return;
+    if (!empresaId) return;
     try {
       setCarregandoApuracao(true);
-      const res = await fetch(`/api/fiscal/apuracao?empresaId=${empresaAtiva.id}&competencia=${competencia}&anexo=${anexo}`);
+      const res = await fetch(`/api/fiscal/apuracao?empresaId=${empresaId}&competencia=${competencia}&anexo=${anexo}`);
       if (res.ok) {
         const data = await res.json();
         setApuracao(data);
@@ -87,6 +88,53 @@ export default function FiscalPage() {
       console.error(err);
     } finally {
       setCarregandoApuracao(false);
+    }
+  };
+
+  // Processa uma lista de arquivos imediatamente
+  const processarArquivos = async (listaArquivos) => {
+    if (!listaArquivos || listaArquivos.length === 0) return;
+    if (!empresaId) {
+      setMensagemErro('Selecione uma empresa ativa antes de importar notas fiscais.');
+      return;
+    }
+
+    try {
+      setUploadando(true);
+      setStatusProgresso(`Enviando e auditando ${listaArquivos.length} arquivo(s)...`);
+      setMensagemErro('');
+      setMensagemSucesso('');
+
+      const formData = new FormData();
+      formData.append('empresaId', empresaId);
+
+      listaArquivos.forEach((arq) => {
+        formData.append('arquivos', arq);
+      });
+
+      const res = await fetch('/api/fiscal/importar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.erro || 'Falha ao processar arquivos');
+      }
+
+      setResultadoUpload(data);
+      setArquivosSelecionados([]);
+      setMensagemSucesso(`✅ Sucesso! ${data.totalNotasLidas} nota(s) importada(s), sendo ${data.itensMonofasicosAuditados} item(ns) com benefício fiscal identificado.`);
+      
+      // Atualiza notas e apuração automaticamente
+      await carregarNotas();
+      await carregarDadosApuracao();
+      setAbaAtiva('apuracao');
+    } catch (err) {
+      setMensagemErro(err.message);
+    } finally {
+      setUploadando(false);
+      setStatusProgresso('');
     }
   };
 
@@ -104,66 +152,30 @@ export default function FiscalPage() {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setArquivosSelecionados(Array.from(e.dataTransfer.files));
+      const files = Array.from(e.dataTransfer.files);
+      setArquivosSelecionados(files);
+      processarArquivos(files);
     }
   };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      setArquivosSelecionados(Array.from(e.target.files));
-    }
-  };
-
-  // Enviar arquivos para o backend
-  const handleEnviarArquivos = async () => {
-    if (arquivosSelecionados.length === 0 || !empresaAtiva?.id) return;
-
-    try {
-      setUploadando(true);
-      setMensagemErro('');
-      setMensagemSucesso('');
-      const formData = new FormData();
-      formData.append('empresaId', empresaAtiva.id);
-
-      arquivosSelecionados.forEach((arq) => {
-        formData.append('arquivos', arq);
-      });
-
-      const res = await fetch('/api/fiscal/importar', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.erro || 'Falha ao processar arquivos');
-      }
-
-      setResultadoUpload(data);
-      setArquivosSelecionados([]);
-      setMensagemSucesso(`Importação concluída! ${data.totalNotasLidas} notas fiscais processadas.`);
-      
-      // Atualiza notas e apuração automaticamente
-      carregarNotas();
-      carregarDadosApuracao();
-      setAbaAtiva('apuracao');
-    } catch (err) {
-      setMensagemErro(err.message);
-    } finally {
-      setUploadando(false);
+      const files = Array.from(e.target.files);
+      setArquivosSelecionados(files);
+      processarArquivos(files);
     }
   };
 
   // Salvar Apuração no Banco
   const handleSalvarApuracao = async () => {
-    if (!apuracao?.apuracao || !empresaAtiva?.id) return;
+    if (!apuracao?.apuracao || !empresaId) return;
     try {
       const ap = apuracao.apuracao;
       const res = await fetch('/api/fiscal/apuracao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresaId: empresaAtiva.id,
+          empresaId: empresaId,
           competencia,
           anexo,
           rbt12: ap.rbt12,
@@ -190,7 +202,7 @@ export default function FiscalPage() {
 
   // Gerar Pré-visualização da Integração Contábil
   const handleCarregarPreviewIntegracao = async () => {
-    if (!empresaAtiva?.id) return;
+    if (!empresaId) return;
     try {
       setCarregandoPreview(true);
       setMensagemErro('');
@@ -198,7 +210,7 @@ export default function FiscalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresaId: empresaAtiva.id,
+          empresaId: empresaId,
           competencia,
           preview: true,
         }),
@@ -216,7 +228,7 @@ export default function FiscalPage() {
 
   // Confirmar e Gravar Lançamentos Contábeis
   const handleConfirmarIntegracao = async () => {
-    if (!empresaAtiva?.id) return;
+    if (!empresaId) return;
     try {
       setIntegrando(true);
       setMensagemErro('');
@@ -224,7 +236,7 @@ export default function FiscalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresaId: empresaAtiva.id,
+          empresaId: empresaId,
           competencia,
           preview: false,
         }),
@@ -235,10 +247,9 @@ export default function FiscalPage() {
 
       setMensagemSucesso(data.mensagem || 'Lançamentos contábeis criados com sucesso no Diário!');
       setPreviewIntegracao(null);
-      carregarNotas();
-      carregarDadosApuracao();
-      if (carregarLancamentos) carregarLancamentos();
-      if (carregarDados) carregarDados();
+      await carregarNotas();
+      await carregarDadosApuracao();
+      if (refreshData) refreshData();
     } catch (err) {
       setMensagemErro('Erro ao integrar: ' + err.message);
     } finally {
@@ -350,14 +361,16 @@ export default function FiscalPage() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !uploadando && fileInputRef.current?.click()}
             >
-              <div className={styles.dropzoneIcon}>📁</div>
+              <div className={styles.dropzoneIcon}>{uploadando ? '⏳' : '📁'}</div>
               <h3 className={styles.dropzoneTitle}>
-                Arraste seus arquivos XML ou pasta compactada (.ZIP) aqui
+                {uploadando ? 'Processando e Auditando XMLs...' : 'Arraste seus arquivos XML ou pasta compactada (.ZIP) aqui'}
               </h3>
               <p className={styles.dropzoneText}>
-                Suporta múltiplos arquivos <strong>.xml</strong> de NF-e (Modelo 55) e NFC-e (Modelo 65), ou um arquivo compactado <strong>.zip</strong> contendo todas as notas fiscais do mês.
+                {uploadando
+                  ? statusProgresso || 'Aguarde enquanto o sistema lê os itens, audita produtos monofásicos e calcula os tributos...'
+                  : 'Suporta múltiplos arquivos .xml de NF-e (Modelo 55) e NFC-e (Modelo 65), ou um arquivo compactado .zip contendo todas as notas fiscais do mês.'}
               </p>
               <input
                 type="file"
@@ -366,21 +379,24 @@ export default function FiscalPage() {
                 accept=".xml,.zip"
                 style={{ display: 'none' }}
                 onChange={handleFileChange}
+                disabled={uploadando}
               />
-              <button
-                type="button"
-                className={styles.btnUpload}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRef.current?.click();
-                }}
-              >
-                Selecionar Arquivos do Computador
-              </button>
+              {!uploadando && (
+                <button
+                  type="button"
+                  className={styles.btnUpload}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                >
+                  Selecionar Arquivos do Computador
+                </button>
+              )}
             </div>
 
             {/* LISTA DE ARQUIVOS PRONTOS */}
-            {arquivosSelecionados.length > 0 && (
+            {arquivosSelecionados.length > 0 && !uploadando && (
               <div className={styles.listaArquivosSelecionados}>
                 <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                   Arquivos selecionados ({arquivosSelecionados.length}):
@@ -401,10 +417,10 @@ export default function FiscalPage() {
                 <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
                   <button
                     className={styles.btnPrimario}
-                    onClick={handleEnviarArquivos}
+                    onClick={() => processarArquivos(arquivosSelecionados)}
                     disabled={uploadando}
                   >
-                    {uploadando ? '⏳ Auditando e Processando...' : '🚀 Processar e Auditar Notas Fiscais'}
+                    🚀 Processar e Auditar Notas Fiscais
                   </button>
                   <button
                     className={styles.btnSecundario}
