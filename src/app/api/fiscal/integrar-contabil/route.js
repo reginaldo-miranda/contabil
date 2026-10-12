@@ -27,37 +27,42 @@ export async function POST(request) {
 
     // 1. Localiza contas padrão da empresa para vendas e impostos se não foram enviadas explicitamente
     const contasEmpresa = await prisma.conta.findMany({
-      where: { empresaId: empId, tipo: 'Analítica', ativa: true }
+      where: {
+        empresaId: empId,
+        tipo: { in: ['A', 'Analítica'] },
+        ativa: true
+      }
     });
 
     // Helper para achar conta por nome ou código
-    const acharConta = (termos = [], fallbackPrefixo = null) => {
+    const acharConta = (termos = [], fallbackPrefixos = []) => {
       for (const termo of termos) {
         const encontrada = contasEmpresa.find(c =>
           c.nome.toLowerCase().includes(termo.toLowerCase())
         );
         if (encontrada) return encontrada.id;
       }
-      if (fallbackPrefixo) {
-        const porPrefixo = contasEmpresa.find(c => c.codigo.startsWith(fallbackPrefixo));
+      const prefixos = Array.isArray(fallbackPrefixos) ? fallbackPrefixos : (fallbackPrefixos ? [fallbackPrefixos] : []);
+      for (const prefixo of prefixos) {
+        const porPrefixo = contasEmpresa.find(c => c.codigo.startsWith(prefixo));
         if (porPrefixo) return porPrefixo.id;
       }
       return null;
     };
 
     // Débito Venda: Clientes / Duplicatas a Receber / Caixa
-    const debitoVendaId = contaDebitoVendaId || acharConta(['duplicatas a receber', 'clientes'], '1.1.2') || acharConta(['caixa geral', 'banco'], '1.1.1');
+    const debitoVendaId = contaDebitoVendaId || acharConta(['duplicatas a receber', 'clientes'], ['1.1.2', '1.1.1']);
     // Crédito Venda: Receita de Vendas de Mercadorias / Receita de Serviços
-    const creditoVendaId = contaCreditoVendaId || acharConta(['receita de vendas', 'vendas de mercadorias', 'receita operacional'], '4.1');
+    const creditoVendaId = contaCreditoVendaId || acharConta(['receita de vendas', 'vendas de mercadorias', 'receita operacional'], ['3.1', '4.1']);
 
     // Débito Imposto: Simples Nacional / Deduções da Receita / Impostos sobre Vendas
-    let debitoImpostoId = contaDebitoImpostoId || acharConta(['simples nacional', 'impostos s/ vendas', 'icms s/ vendas', 'pis s/ faturamento'], '4.2');
+    let debitoImpostoId = contaDebitoImpostoId || acharConta(['simples nacional', 'impostos s/ vendas', 'icms s/ vendas', 'pis s/ faturamento'], ['3.2', '4.2']);
     // Crédito Imposto: Simples Nacional a Recolher / Obrigações Tributárias
-    let creditoImpostoId = contaCreditoImpostoId || acharConta(['simples nacional a recolher', 'tributos a recolher', 'impostos a recolher', 'icms a recolher'], '2.1.3');
+    let creditoImpostoId = contaCreditoImpostoId || acharConta(['simples nacional a recolher', 'tributos a recolher', 'impostos a recolher', 'icms a recolher'], ['2.1.3']);
 
     // Se ainda não tiver contas específicas para o Simples Nacional, podemos usar a primeira conta analítica de deduções e impostos
-    if (!debitoImpostoId) debitoImpostoId = acharConta([], '4.2') || creditoVendaId;
-    if (!creditoImpostoId) creditoImpostoId = acharConta([], '2.1.3') || debitoVendaId;
+    if (!debitoImpostoId) debitoImpostoId = acharConta([], ['3.2', '4.2']) || creditoVendaId;
+    if (!creditoImpostoId) creditoImpostoId = acharConta([], ['2.1.3']) || debitoVendaId;
 
     // 2. Busca notas de saída do mês que ainda não foram integradas
     const notasParaIntegrar = await prisma.notaFiscal.findMany({
