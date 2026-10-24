@@ -75,6 +75,24 @@ O sistema inicia em background e não fecha se o usuário fechar o terminal:
 
 ---
 
+### 4. Como Acessar de Outra Máquina (Rede Local / Wi-Fi)
+
+Para acessar o sistema a partir de outro computador, notebook ou tablet conectado na mesma rede (Wi-Fi ou cabo):
+
+1. **Liberar a Porta no Firewall (caso necessario)**:
+   - Dê dois cliques no arquivo **`liberar_rede.bat`** (ele solicitará permissão de administrador e criará a regra no Firewall do Windows automaticamente).
+
+2. **Iniciar o Sistema**:
+   - Inicie o sistema normalmente nesta máquina servidora via `iniciar_sistema.bat` ou `iniciar_segundo_plano.bat`.
+
+3. **No Navegador da Outra Máquina**:
+   - Abra qualquer navegador (Chrome, Edge, Firefox) e digite:
+     - **Por IP**: `http://192.168.0.49:3000`
+     - **Ou por Nome de Rede**: `http://AZUS-PC:3000`
+   - Ou utilize o arquivo de atalho **`ContabilPro_Acesso_Rede.url`** copiado para a Área de Trabalho da outra máquina.
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
 - **Framework**: Next.js 16 (App Router)
 - **Biblioteca Visual**: React 19

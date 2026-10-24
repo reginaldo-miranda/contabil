@@ -106,17 +106,32 @@ start "" "http://localhost:3000"
 :: -----------------------------------------------
 :: 7. Resumo final
 :: -----------------------------------------------
+set "IP_REDE="
+for /f "usebackq tokens=*" %%I in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -match 'Wi-Fi|Ethernet' -and $_.IPAddress -notlike '169.254*' } | Select-Object -First 1).IPAddress" 2^>nul`) do (
+    set "IP_REDE=%%I"
+)
+
 echo.
-echo  ==========================================
-echo      SISTEMA INICIADO COM SUCESSO!
-echo  ==========================================
+echo  ======================================================
+echo              SISTEMA INICIADO COM SUCESSO!
+echo  ======================================================
 echo.
-echo   Local:  http://localhost:3000
+echo   [Nesta Maquina]
+echo   Navegador:     http://localhost:3000
+echo.
+echo   [De Outras Maquinas na Mesma Rede (Wi-Fi/Cabo)]
+if defined IP_REDE (
+echo   Por IP:        http://%IP_REDE%:3000
+) else (
+echo   Por IP:        http://192.168.0.49:3000
+)
+echo   Por Nome:      http://%COMPUTERNAME%:3000
 echo.
 echo   Uma janela do CMD foi aberta com o servidor.
 echo   Para parar: feche a janela "ContabilPro"
 echo   ou pressione Ctrl+C nela.
 echo.
-echo  ==========================================
+echo  ======================================================
 echo.
 pause
+

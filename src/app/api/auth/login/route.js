@@ -84,7 +84,7 @@ export async function POST(request) {
       name: TOKEN_COOKIE_NAME,
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Permite acesso via HTTP na rede local (ex: Mac acessando 192.168.0.49)
       sameSite: 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60, // 7 dias

@@ -59,8 +59,7 @@ export default function LoginPage() {
       }
 
       await loadEmpresas();
-      router.push('/');
-      router.refresh();
+      window.location.href = '/';
     } catch (err) {
       setErro('Erro de conexão ao servidor');
       setLoading(false);
@@ -109,8 +108,7 @@ export default function LoginPage() {
       }
 
       await loadEmpresas();
-      router.push('/');
-      router.refresh();
+      window.location.href = '/';
     } catch (err) {
       setErro('Erro de conexão ao servidor');
       setLoading(false);
