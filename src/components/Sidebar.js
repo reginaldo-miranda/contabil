@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useContabil } from '@/context/ContabilContext';
 import SeletorEmpresa from './SeletorEmpresa';
+import BotaoComandoVoz from './BotaoComandoVoz';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -86,6 +87,7 @@ export default function Sidebar() {
 
         <div className={styles.empresaWrapper}>
           <SeletorEmpresa />
+          <BotaoComandoVoz />
         </div>
 
         <nav className={styles.nav}>
