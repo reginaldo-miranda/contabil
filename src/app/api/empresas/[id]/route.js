@@ -21,15 +21,21 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const body = await request.json();
+    const dataUpdate = {};
+    if (body.nome !== undefined) dataUpdate.nome = body.nome?.trim();
+    if (body.cnpj !== undefined) dataUpdate.cnpj = body.cnpj?.trim() || null;
+    if (body.configuracoesVoz !== undefined) dataUpdate.configuracoesVoz = body.configuracoesVoz;
+
     const empresa = await prisma.empresa.update({
       where: { id: parseInt(id) },
-      data: { nome: body.nome?.trim(), cnpj: body.cnpj?.trim() || null },
+      data: dataUpdate,
     });
     return NextResponse.json(empresa);
   } catch (error) {
     if (error.code === 'P2002') {
       return NextResponse.json({ erro: 'CNPJ já cadastrado' }, { status: 409 });
     }
+    console.error('Erro ao atualizar empresa:', error);
     return NextResponse.json({ erro: 'Erro ao atualizar empresa' }, { status: 500 });
   }
 }

@@ -7,7 +7,7 @@ export async function POST() {
     const isWindows = process.platform === 'win32';
     const scriptPath = path.resolve(process.cwd(), isWindows ? 'parar_sistema.bat' : 'parar_sistema.sh');
 
-    // Disparar o desligamento apos 1.5s para garantir que o navegador receba a resposta HTTP de sucesso
+    // Disparar o desligamento após 3s para garantir que o navegador receba e renderize a resposta HTTP com tranquilidade
     setTimeout(() => {
       try {
         if (isWindows) {
@@ -28,12 +28,19 @@ export async function POST() {
       } catch (err) {
         console.error('Erro ao executar encerramento do sistema:', err);
       }
-    }, 1500);
+    }, 3000);
 
-    return NextResponse.json({
-      sucesso: true,
-      mensagem: 'Comando de encerramento recebido. O sistema e os serviços locais estão sendo finalizados.',
-    });
+    return NextResponse.json(
+      {
+        sucesso: true,
+        mensagem: 'Comando de encerramento recebido. O sistema e os serviços locais estão sendo finalizados.',
+      },
+      {
+        headers: {
+          'Connection': 'close',
+        },
+      }
+    );
   } catch (error) {
     console.error('Erro na API de encerramento do sistema:', error);
     return NextResponse.json(

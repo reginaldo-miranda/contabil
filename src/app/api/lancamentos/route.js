@@ -182,10 +182,12 @@ export async function POST(request) {
         return NextResponse.json({ erro: `Conta de crédito (ID ${pair.contaCreditoId}) inválida ou inativa` }, { status: 400 });
       }
 
-      if (cDeb.tipo !== 'A') {
+      const ehAnalitica = (tipo) => tipo === 'A' || tipo === 'Analítica' || tipo === 'ANALITICA';
+
+      if (!ehAnalitica(cDeb.tipo)) {
         return NextResponse.json({ erro: `A conta de débito (${cDeb.codigo} - ${cDeb.nome}) é Sintética. Lançamentos só são permitidos em contas Analíticas.` }, { status: 400 });
       }
-      if (cCred.tipo !== 'A') {
+      if (!ehAnalitica(cCred.tipo)) {
         return NextResponse.json({ erro: `A conta de crédito (${cCred.codigo} - ${cCred.nome}) é Sintética. Lançamentos só são permitidos em contas Analíticas.` }, { status: 400 });
       }
     }

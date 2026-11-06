@@ -23,6 +23,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
     codigo: '',
     reduzido: '',
     nome: '',
+    apelidos: '',
     tipo: 'S',
     natureza: 'D',
     grupo: 'ATIVO',
@@ -35,6 +36,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
         codigo: conta.codigo || '',
         reduzido: conta.reduzido != null ? String(conta.reduzido) : '',
         nome: conta.nome || '',
+        apelidos: conta.apelidos || '',
         tipo: normalizeTipo(conta.tipo),
         natureza: normalizeNatureza(conta.natureza),
         grupo: conta.grupo || 'ATIVO',
@@ -46,6 +48,7 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
         codigo: contaPai.codigo ? `${contaPai.codigo}.` : '',
         reduzido: '',
         nome: '',
+        apelidos: '',
         tipo: 'A',
         natureza: normalizeNatureza(contaPai.natureza),
         grupo: contaPai.grupo || 'ATIVO',
@@ -120,6 +123,21 @@ export default function FormConta({ conta, contaPai, empresaId: empresaIdProp, o
               onChange={e => setFormData({...formData, nome: e.target.value})}
             />
           </div>
+
+          {formData.tipo === 'A' && (
+            <div className={styles.group}>
+              <label title="Nomes alternativos usados apenas na busca por comando de voz">
+                Apelidos de voz <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 'normal' }}>(separe por vírgula)</span>
+              </label>
+              <input
+                type="text"
+                maxLength={500}
+                value={formData.apelidos}
+                onChange={e => setFormData({...formData, apelidos: e.target.value})}
+                placeholder="Ex: mercado, rancho, compras do mês"
+              />
+            </div>
+          )}
           
           <div className={styles.row}>
             <div className={styles.group}>

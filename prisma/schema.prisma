@@ -13,6 +13,7 @@ model Empresa {
   cnpj        String?          @unique @db.VarChar(18)
   ativa       Boolean          @default(true)
   criadoEm    DateTime         @default(now()) @map("criado_em")
+  configuracoesVoz Json?       @map("configuracoes_voz")
   contas      Conta[]
   lancamentos Lancamento[]
   lancamentosPadrao LancamentoPadrao[]
@@ -58,6 +59,7 @@ model Conta {
   codigo       String   @db.VarChar(20)
   reduzido     Int?
   nome         String   @db.VarChar(200)
+  apelidos     String?  @db.VarChar(500)
   tipo         String   @db.VarChar(10)
   natureza     String   @db.VarChar(10)
   nivel        Int

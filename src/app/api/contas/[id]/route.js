@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// Apelidos de voz: lista separada por vírgula, sem duplicados e sem vazios
+function normalizarApelidos(valor) {
+  if (valor === undefined || valor === null) return null;
+  const lista = String(valor)
+    .split(/[,;\n]/)
+    .map(a => a.trim())
+    .filter(Boolean);
+  const unicos = [...new Set(lista)];
+  return unicos.length > 0 ? unicos.join(', ').slice(0, 500) : null;
+}
 export async function GET(request, { params }) {
   try {
     const { id } = await params;
@@ -27,6 +37,7 @@ export async function PUT(request, { params }) {
     const data = {};
     if (body.codigo !== undefined) data.codigo = body.codigo.trim();
     if (body.nome !== undefined) data.nome = body.nome.trim();
+    if (body.apelidos !== undefined) data.apelidos = normalizarApelidos(body.apelidos);
     if (body.tipo !== undefined) {
       data.tipo = body.tipo;
       if (body.tipo === 'S' || body.tipo === 'Sintética') {
